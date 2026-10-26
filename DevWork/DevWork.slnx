@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DevWork.API/DevWork.API.csproj" />
+  <Project Path="DevWork.Shared/DevWork.Shared.csproj" />
+  <Project Path="DevWork.WEB/DevWork.WEB.csproj" />
+</Solution>
