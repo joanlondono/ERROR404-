@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DevWork.Shared.Models
 {
-    internal class Certificacion
+    public class Certificacion
     {
         public int Id { get; set; }
         public int PerfilProfesionalId { get; set; }

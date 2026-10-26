@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DevWork.Shared.Models
 {
-    internal class Aplicacion
+    public class Aplicacion
     {
         public int Id { get; set; }
 
