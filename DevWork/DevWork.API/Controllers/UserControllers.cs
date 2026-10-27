@@ -58,5 +58,41 @@ namespace DevWork.API.Controllers
             return Ok(users);
 
         }
+
+
+        [HttpPut]
+        public async Task<ActionResult> Put(User users)
+        {
+            _context.Add(users);
+            await _context.SaveChangesAsync();
+            return Ok(users);
+
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
+            {
+
+
+                return NotFound();
+            }
+            _context.Remove(user);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpPatch]
+
+        public async Task<ActionResult> Patch(User user)
+        {
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+            return Ok(user);
+
+        }
+
     }
 }
