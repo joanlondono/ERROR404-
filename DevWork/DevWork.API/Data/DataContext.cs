@@ -1,7 +1,6 @@
 ﻿using DevWork.Shared.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
-using static System.Net.Mime.MediaTypeNames;
+
 
 namespace DevWork.API.Data
 {
