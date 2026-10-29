@@ -31,7 +31,7 @@ namespace DevWork.Shared.Models
 
         [Required(ErrorMessage = "El área de especialidad es obligatoria")]
         [StringLength(100, ErrorMessage = "El área de especialidad no puede tener más de 100 caracteres")]
-        public decimal AreaEspecialidad { get; set; }
+        public string AreaEspecialidad { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La tarifa por hora es obligatoria")]
         [Column(TypeName = "decimal(18, 2)")]
