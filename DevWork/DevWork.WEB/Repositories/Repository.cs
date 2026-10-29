@@ -4,7 +4,7 @@ using System.Text.Json;
 
 
 
-namespace Veterinary.WEB.Repositories
+namespace DevWork.WEB.Repositories
 
 {
 
