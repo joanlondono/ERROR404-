@@ -9,8 +9,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name=DefaultConnection"));
-builder.Services.AddTransient<SeedDb>();
+builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
@@ -37,9 +36,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
 
     {
-
-        options.SwaggerEndpoint("/openapi/v1.json", "v1");
-
+        options.SwaggerEndpoint("/openapi/v1.json", "DevWork.API v1");
     });
 
 }
@@ -49,5 +46,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(origin => true)
+    .AllowCredentials());
+
 
 app.Run();
