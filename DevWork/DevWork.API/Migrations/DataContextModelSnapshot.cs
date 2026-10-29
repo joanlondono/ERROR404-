@@ -165,9 +165,10 @@ namespace DevWork.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("AreaEspecialidad")
+                    b.Property<string>("AreaEspecialidad")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Biografia")
                         .IsRequired()
@@ -249,7 +250,7 @@ namespace DevWork.API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("PresupuestoOSalario")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("TipoOferta")
                         .IsRequired()

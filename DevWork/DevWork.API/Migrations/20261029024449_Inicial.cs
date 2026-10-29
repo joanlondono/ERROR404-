@@ -19,8 +19,8 @@ namespace DevWork.API.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PublicacionId = table.Column<int>(type: "int", nullable: false),
                     PerfilProfesionalId = table.Column<int>(type: "int", nullable: false),
-                    PropuestaMensaje = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Estado = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PropuestaMensaje = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Estado = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     FechaPostulacion = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -35,10 +35,10 @@ namespace DevWork.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PerfilProfesionalId = table.Column<int>(type: "int", nullable: false),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EnteEmisor = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    EnteEmisor = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     FechaObtencion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UrlCredencial = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    UrlCredencial = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -52,8 +52,8 @@ namespace DevWork.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PerfilProfesionalId = table.Column<int>(type: "int", nullable: false),
-                    Titulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Institucion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Institucion = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -69,9 +69,9 @@ namespace DevWork.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PerfilProfesionalId = table.Column<int>(type: "int", nullable: false),
-                    Cargo = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Empresa = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Cargo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Empresa = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     FechaInicio = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FechaFin = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -87,13 +87,14 @@ namespace DevWork.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    TituloProfesional = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Biografia = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    HabilidadesTecnicas = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AreaEspecialidad = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    TarifaHora = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EnlaceGitHub = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EnlaceLinkedIn = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    NombreCompleto = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TituloProfesional = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Biografia = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    HabilidadesTecnicas = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    AreaEspecialidad = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TarifaHora = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    EnlaceGitHub = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    EnlaceLinkedIn = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -107,7 +108,7 @@ namespace DevWork.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PublicacionId = table.Column<int>(type: "int", nullable: false),
-                    TextoPregunta = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    TextoPregunta = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -120,10 +121,10 @@ namespace DevWork.API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Titulo = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Titulo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AreaSistemas = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TipoOferta = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AreaSistemas = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TipoOferta = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     PresupuestoOSalario = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -138,7 +139,7 @@ namespace DevWork.API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -151,8 +152,8 @@ namespace DevWork.API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

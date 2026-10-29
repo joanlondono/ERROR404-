@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace DevWork.Shared.Models
@@ -26,6 +27,7 @@ namespace DevWork.Shared.Models
         public string TipoOferta { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El presupuesto o salario es obligatorio")]
+        [Column(TypeName = "decimal(18, 2)")]
         [Range(0.01,100000000, ErrorMessage = "El presupuesto o salario debe ser un valor positivo")]
         public decimal PresupuestoOSalario { get; set; }
 
