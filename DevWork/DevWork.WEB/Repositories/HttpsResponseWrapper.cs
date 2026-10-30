@@ -4,7 +4,7 @@
 
  
 
-namespace Veterinary.WEB.Repositories
+namespace DevWork.WEB.Repositories
     {
 
         public class HttpResponseWrapper<T>
