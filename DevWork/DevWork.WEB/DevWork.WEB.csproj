@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DevWork.Shared\DevWork.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
