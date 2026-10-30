@@ -1,0 +1,165 @@
+﻿@page "/Users" 
+
+@using User = DevWork.WEB.Shared
+
+@using DevWork.WEB.Repositories
+
+@using DevWork.WEB.Shared
+
+ 
+
+ 
+
+@inject IRepository repository
+
+<h3>Userindex</h3>
+
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/Users/Create">New User</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="Users">
+
+ 
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>FEmail</th>
+
+                    <th>Password</th>
+
+                    <th>RoleId</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var user in Users!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @user.Id
+
+                        </td>
+
+                        <td>
+
+                            @user.Email 
+
+                        </td>
+
+ 
+
+                        
+
+                        <td>
+
+                            @user.RoleId
+
+                        </td>
+
+ 
+
+ 
+
+                      
+
+ 
+
+ 
+
+ 
+
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<UserModel>? Users { get; set; }
+
+
+
+     protected async override Task OnInitializedAsync()
+
+     {
+
+         var responseHppt = await repository.GetAsync<List<UserModel>>("/api/users");
+
+        Users = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
