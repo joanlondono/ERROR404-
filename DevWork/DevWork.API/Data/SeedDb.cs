@@ -41,7 +41,6 @@ namespace DevWork.API.Data
             }
         }
 
-
         private async Task CheckPerfilProfesionalAsync()
         {
             if (!_context.PerfilProfesionales.Any())
@@ -54,7 +53,7 @@ namespace DevWork.API.Data
                     TituloProfesional = "Ingeniera de Sistemas",
                     HabilidadesTecnicas = "C#, ASP.NET Core, SQL Server, Git",
                     AreaEspecialidad = "Desarrollo Backend",
-                    TarifaHora = 45000,          // sin comillas si el campo es numérico
+                    TarifaHora = 45000,          
                     EnlaceGitHub = "https://github.com/diana-dev"
                 });
                 await _context.SaveChangesAsync();
