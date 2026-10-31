@@ -1,6 +1,7 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevWork.API.Controllers
@@ -93,6 +94,8 @@ namespace DevWork.API.Controllers
             return Ok(user);
 
         }
+
+        
 
     }
 }

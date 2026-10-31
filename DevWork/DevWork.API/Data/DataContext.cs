@@ -1,10 +1,11 @@
 ﻿using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 
 namespace DevWork.API.Data
 {
-    public class DataContext : DbContext
+    public class DataContext : IdentityDbContext<User, Role, int>
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
@@ -24,9 +25,6 @@ namespace DevWork.API.Data
 
         public DbSet<Pregunta> Preguntas { get; set; }
 
-        public DbSet<Role> Roles { get; set; }
-
-        public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -79,5 +79,58 @@ namespace DevWork.API.Controllers
 
         }
 
+        [HttpGet("filter")]
+
+        public async Task<ActionResult> GetFiltered(string text)
+        {
+            var query = _context.PerfilProfesionales
+
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                text = text.Trim().ToLower();
+                query = query.Where( x =>  
+                    x.UserId.ToString().Contains(text) ||
+                    x.NombreCompleto.ToLower().Contains(text) ||
+                    x.TituloProfesional.ToLower().Contains(text));
+
+
+
+
+            }
+            var data = await query
+                .OrderBy(x => x.UserId)
+                .ThenBy(x => x.NombreCompleto)
+                .ToListAsync();
+            return Ok(data);
+
+        }
+
+        [HttpGet("{id}:int/hateoas")]
+        public async Task<ActionResult> GetWithLinks(int id)
+        {
+
+            var perfilprofesional = await _context.PerfilProfesionales
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
+            if (perfilprofesional == null)
+            {
+                return NotFound(); //404
+            }
+            var response = new
+            {
+                perfilprofesional,
+                links = new List<object>
+                {
+                    new { rel = "self", href = Url.Action("Get", new { id = perfilprofesional.Id }) },
+                    new { rel = "update", href = Url.Action("Put") },
+                    new { rel = "delete", href = Url.Action("Delete", new { id = perfilprofesional.Id }) }
+                }
+            };
+            return Ok(response);
+        }
+
     }
 }
