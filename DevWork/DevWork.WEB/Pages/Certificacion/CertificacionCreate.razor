@@ -1,0 +1,30 @@
+﻿@page "/certificaciones/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear certificación</h3>
+
+<CertificacionForm @ref="certificacionForm" Certificacion="certificacion" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private CertificacionModel certificacion = new();
+    private CertificacionForm certificacionForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/certificacion", certificacion);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        certificacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/certificaciones");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/certificaciones");
+}

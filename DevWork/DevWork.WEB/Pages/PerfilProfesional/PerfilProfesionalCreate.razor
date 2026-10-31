@@ -1,0 +1,30 @@
+﻿@page "/perfiles/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear perfil profesional</h3>
+
+<PerfilProfesionalForm @ref="perfilForm" PerfilProfesional="perfil" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private perfilprofesionalmodel perfil = new();
+    private PerfilProfesionalForm perfilForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/perfilprofesional", perfil);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        perfilForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/Perfiles");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/Perfiles");
+}

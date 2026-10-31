@@ -1,0 +1,72 @@
+﻿@page "/users/create"
+
+@using DevWork.Shared.Models
+
+ 
+
+@inject IRepository repository 
+
+ 
+
+@inject NavigationManager navigationManager 
+
+ 
+
+@inject SweetAlertService sweetAlertService 
+
+<h3>Crear usuario</h3>
+
+<UserForm @ref="userForm" User="user" OnSubmit="Create" ReturnAction="Return" />
+
+ 
+
+ 
+
+ 
+
+@code {
+
+    private UserModel user = new();
+
+    private UserForm userForm = null!;
+
+
+
+
+
+
+
+    private async Task Create()
+
+    { 
+
+ 
+
+        var responseHttp = await repository.PostAsync("/api/user", user);
+
+        if (responseHttp.Error) 
+
+        { 
+
+            var message = await responseHttp.GetErrorMessageAsync(); 
+
+            await sweetAlertService.FireAsync("Error", message); 
+
+            return; 
+
+        } 
+
+        userForm.FormPostedSuccessfully = true;
+
+        navigationManager.NavigateTo("/Users");
+
+    } 
+
+ 
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/Users");
+    }
+
+}

@@ -1,0 +1,73 @@
+﻿@page "/perfiles/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+<h3>Editar perfil profesional</h3>
+
+@if (perfilProfesional is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <PerfilProfesionalForm @ref="perfilProfesionalForm"
+                           PerfilProfesional="perfilProfesional"
+                           OnSubmit="Edit"
+                           ReturnAction="Return" />
+}
+
+@code {
+    private perfilprofesionalmodel? perfilProfesional;
+    private PerfilProfesionalForm perfilProfesionalForm = null!;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await repository.GetAsync<perfilprofesionalmodel>(
+            $"/api/perfilprofesional/{Id}");
+
+        if (response.Error)
+        {
+            if (response.HttpResponseMessage.StatusCode ==
+                System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/Perfiles");
+                return;
+            }
+
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        perfilProfesional = response.Response;
+    }
+
+    private async Task Edit()
+    {
+        var response = await repository.PutAsync(
+            "/api/perfilprofesional",
+            perfilProfesional);
+
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        perfilProfesionalForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/Perfiles");
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/Perfiles");
+    }
+}
+
+ 

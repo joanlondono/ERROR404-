@@ -1,0 +1,137 @@
+﻿@page "/ExperienciaProfesional"
+@inject IRepository repository
+<h3>Experienciaindex</h3>
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/Experienciaprofesional/Create">New Experiencia</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="Experienciaprofesional">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>PerfilProfesionalId</th>
+                    <th>Cargo</th>
+                    <th>Empresa</th>
+                    <th>Descripcion</th>
+                    <th>FechaInicio</th>
+                    <th>FechaFin</th>
+                   
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var experiencia in Experienciaprofesional!)
+
+                {
+
+                    <tr>
+
+
+                         
+
+                        <td>
+
+                            @experiencia.Id
+
+                        </td>
+                        <td>@experiencia.PerfilProfesionalId</td>
+                        <td>@experiencia.Cargo</td>
+                        <td>@experiencia.Empresa</td>
+                        <td>@experiencia.Descripcion</td>
+                        <td>@experiencia.FechaInicio</td>
+                        <td>@experiencia.FechaFin</td>
+
+                        
+                        
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<Experienciaprofesionalmodel>? Experienciaprofesional { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<Experienciaprofesionalmodel>>("/api/experiencias");
+
+        Experienciaprofesional = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+
+

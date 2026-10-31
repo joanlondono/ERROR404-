@@ -1,0 +1,153 @@
+﻿@page "/roles"
+
+
+ 
+
+@inject IRepository repository
+
+<h3>Roleindex</h3>
+
+<div class="mb-3">
+
+ 
+
+ 
+
+<a class="btn btn-primary " href="/Roles/Create">New Role</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="Roles">
+
+ 
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>Nombre</th>
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var role in Roles !)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @role.Id
+
+                        </td>
+
+                        <td>
+
+                            @role.Nombre
+
+                        </td>
+
+ 
+
+                        
+
+
+ 
+
+                      
+
+ 
+
+ 
+
+ 
+
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<RoleModel>? Roles { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<RoleModel>>("/api/roles");
+
+        Roles = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+

@@ -1,0 +1,30 @@
+﻿@page "/roles/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear rol</h3>
+
+<RoleForm @ref="roleForm" Role="role" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private RoleModel role = new();
+    private RoleForm roleForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/role", role);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        roleForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/roles");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/roles");
+}

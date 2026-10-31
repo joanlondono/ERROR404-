@@ -1,0 +1,81 @@
+﻿@inject SweetAlertService swal
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Id de publicación:</label>
+        <InputNumber class="form-control" @bind-Value="Aplicacion.PublicacionId" />
+        <ValidationMessage For="@(() => Aplicacion.PublicacionId)" />
+    </div>
+    <div class="mb-3">
+        <label>Id de perfil profesional:</label>
+        <InputNumber class="form-control" @bind-Value="Aplicacion.PerfilProfesionalId" />
+        <ValidationMessage For="@(() => Aplicacion.PerfilProfesionalId)" />
+    </div>
+    <div class="mb-3">
+        <label>Propuesta:</label>
+        <InputTextArea class="form-control" @bind-Value="Aplicacion.PropuestaMensaje" />
+        <ValidationMessage For="@(() => Aplicacion.PropuestaMensaje)" />
+    </div>
+    <div class="mb-3">
+        <label>Estado:</label>
+        <InputText class="form-control" @bind-Value="Aplicacion.Estado" />
+        <ValidationMessage For="@(() => Aplicacion.Estado)" />
+    </div>
+    <div class="mb-3">
+        <label>Fecha de postulación:</label>
+        <InputDate class="form-control" @bind-Value="Aplicacion.FechaPostulacion" />
+        <ValidationMessage For="@(() => Aplicacion.FechaPostulacion)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+</EditForm>
+
+@code {
+    private EditContext editContext = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public AplicacionModel Aplicacion { get; set; } = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback ReturnAction { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Aplicacion);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!editContext.IsModified() || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Deseas abandonar la página y perder los cambios?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value))
+        {
+            context.PreventNavigation();
+        }
+    }
+}

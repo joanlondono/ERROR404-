@@ -1,0 +1,182 @@
+﻿@page "/Perfiles" 
+
+
+
+@inject IRepository repository
+
+<h3>Perfilprofesionalindex</h3>
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/PerfilesProfesionales/Create">New PerfilProfesional</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="PerfilesProfesionales">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>UserId</th>
+                    <th>NombreCompleto</th>
+                    <th>TituloProfesional</th>
+                    <th>Biografia</th>
+                    <th>HabilidadesTecnicas</th>
+                    <th>AreaEspecialidad</th>
+                    <th>TarifaHora</th>
+                    <th>EnlaceGithub</th>
+                    <th>EnlaceLinkedin</th>
+                   
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var PF in PerfilesProfesionales!)
+
+                {
+                    <tr>
+
+                    
+                         <td>
+
+                            @PF.Id
+
+                        </td>
+
+                        <td>
+
+                            @PF.UserId
+
+                        </td>
+                        <td>
+                            @PF.NombreCompleto
+                            
+
+                        </td> 
+                        <td>
+                            @PF.TituloProfesional
+                            </td>
+                        <td>
+                            @PF.Biografia
+                            </td>
+                        <td>
+                            @PF.HabilidadesTecnicas
+                            </td>       
+                        <td>
+                            @PF.AreaEspecialidad
+                            </td>
+                        <td>
+                            @PF.TarifaHora
+                         </td>
+                         <td>
+                            @PF.EnlaceGitHub
+                        </td>
+                        <td>
+                            @PF.EnlaceLinkedIn
+                        </td>
+                         
+
+                      
+
+
+                        
+                      <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<perfilprofesionalmodel>? PerfilesProfesionales { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<perfilprofesionalmodel>>("/api/perfiles-profesionales");
+
+        PerfilesProfesionales = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,30 @@
+﻿@page "/educacion/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear educación</h3>
+
+<EducacionForm @ref="educacionForm" Educacion="educacion" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private EducacionModel educacion = new();
+    private EducacionForm educacionForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/educacion", educacion);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        educacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/educacion");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/educacion");
+}

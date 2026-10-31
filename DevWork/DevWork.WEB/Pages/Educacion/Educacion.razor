@@ -1,0 +1,163 @@
+﻿@page "/educacion"
+@inject IRepository repository
+
+ <h3>Educacion</h3>
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/educacion/Create">New Educacion</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="educacion">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>PerfilProfesionalId</th>
+                    <th>Titulo</th>
+                    <th>Institucion</th>
+                    <th>FechaInicio</th>
+                    <th>FechaFin</th>
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var Educacion in educacion!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @Educacion.Id
+
+                        </td>
+
+                        <td>
+
+                            @Educacion.PerfilProfesionalId
+
+                        </td>
+                        <td>
+
+                            @Educacion.Titulo
+
+                        </td>
+
+                        <td>
+
+                            @Educacion.Institucion
+
+                        </td>
+                        <td>
+
+                            @Educacion.FechaInicio
+
+                        </td>
+                        <td>
+
+                            @Educacion.FechaFin
+
+                        </td>
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<EducacionModel>? educacion { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<EducacionModel>>("/api/educaciones");
+
+        educacion = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,157 @@
+﻿@page "/aplicaciones"
+@inject IRepository repository
+<h3>Aplicacion</h3>
+
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/aplicaciones/Create">New Aplicacion</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="aplicaciones">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>PublicacionId</th>
+                    <th>PerfilProfesionalId</th>
+                    <th>PropuestaMensaje</th>
+                    <th>Estado</th>
+                    <th>FechaPostulacion</th>
+                   
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var aplicacion in aplicaciones!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @aplicacion.Id
+
+                        </td>
+
+                        <td>
+
+                            @aplicacion.PublicacionId
+
+                        </td>
+                        <td>
+
+                            @aplicacion.PropuestaMensaje
+
+                        </td>
+                        <td>
+
+                            @aplicacion.Estado
+
+                        </td>
+                        <td>
+
+                            @aplicacion.FechaPostulacion
+
+                        </td>
+
+                        
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<AplicacionModel>? aplicaciones { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<AplicacionModel>>("/api/aplicaciones");
+
+        aplicaciones = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+
+
+

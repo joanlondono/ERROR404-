@@ -1,0 +1,71 @@
+﻿@page "/aplicaciones/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+<h3>Editar aplicación</h3>
+
+@if (Aplicacion is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <AplicacionForm @ref="aplicacionForm"
+                    Aplicacion="Aplicacion"
+                    OnSubmit="Edit"
+                    ReturnAction="Return" />
+}
+
+@code {
+    private AplicacionModel? Aplicacion;
+    private AplicacionForm aplicacionForm = null!;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await repository.GetAsync<AplicacionModel>($"/api/aplicacion/{Id}");
+
+        if (response.Error)
+        {
+            if (response.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/aplicaciones");
+                return;
+            }
+
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        Aplicacion = response.Response;
+    }
+
+    private async Task Edit()
+    {
+        var response = await repository.PutAsync("/api/aplicacion", Aplicacion);
+
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        aplicacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/aplicaciones");
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/aplicaciones");
+    }
+}<h3>AplicacionEdit</h3>
+
+@code {
+
+}

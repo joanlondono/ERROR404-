@@ -1,0 +1,163 @@
+﻿@page "/publicaciones"
+
+@inject IRepository repository
+
+
+<h3>Publicacionindex</h3>
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/Publicaciones/Create">New Publicacion</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="Publicaciones">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>Titulo</th>
+                    <th>Descripcion</th>
+                    <th>AreaSistemas</th>
+                    <th>TipoOferta</th>
+                    <th>UserId</th>
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var publicacion in Publicaciones!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @publicacion.Id
+
+                        </td>
+
+                        <td>
+
+                            @publicacion.Titulo
+
+                        </td>
+                        <td>
+
+                            @publicacion.Descripcion
+
+                        </td>
+                        <td>
+
+                            @publicacion.AreaSistemas
+
+                        </td>
+                        <td>
+
+                            @publicacion.TipoOferta
+
+                        </td>
+                        <td>
+
+                            @publicacion.UserId
+
+                        </td>
+
+ 
+
+                        
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<PublicacionModel>? Publicaciones { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<PublicacionModel>>("/api/publicaciones");
+
+        Publicaciones = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+

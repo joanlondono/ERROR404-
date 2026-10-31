@@ -1,0 +1,101 @@
+﻿@inject SweetAlertService swal
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Id de usuario:</label>
+        <InputNumber class="form-control" @bind-Value="PerfilProfesional.UserId" />
+        <ValidationMessage For="@(() => PerfilProfesional.UserId)" />
+    </div>
+    <div class="mb-3">
+        <label>Nombre completo:</label>
+        <InputText class="form-control" @bind-Value="PerfilProfesional.NombreCompleto" />
+        <ValidationMessage For="@(() => PerfilProfesional.NombreCompleto)" />
+    </div>
+    <div class="mb-3">
+        <label>Título profesional:</label>
+        <InputText class="form-control" @bind-Value="PerfilProfesional.TituloProfesional" />
+        <ValidationMessage For="@(() => PerfilProfesional.TituloProfesional)" />
+    </div>
+    <div class="mb-3">
+        <label>Biografía:</label>
+        <InputTextArea class="form-control" @bind-Value="PerfilProfesional.Biografia" />
+        <ValidationMessage For="@(() => PerfilProfesional.Biografia)" />
+    </div>
+    <div class="mb-3">
+        <label>Habilidades técnicas:</label>
+        <InputTextArea class="form-control" @bind-Value="PerfilProfesional.HabilidadesTecnicas" />
+        <ValidationMessage For="@(() => PerfilProfesional.HabilidadesTecnicas)" />
+    </div>
+    <div class="mb-3">
+        <label>Área de especialidad:</label>
+        <InputText class="form-control" @bind-Value="PerfilProfesional.AreaEspecialidad" />
+        <ValidationMessage For="@(() => PerfilProfesional.AreaEspecialidad)" />
+    </div>
+    <div class="mb-3">
+        <label>Tarifa por hora:</label>
+        <InputNumber class="form-control" @bind-Value="PerfilProfesional.TarifaHora" />
+        <ValidationMessage For="@(() => PerfilProfesional.TarifaHora)" />
+    </div>
+    <div class="mb-3">
+        <label>Enlace de GitHub:</label>
+        <InputText class="form-control" @bind-Value="PerfilProfesional.EnlaceGitHub" />
+        <ValidationMessage For="@(() => PerfilProfesional.EnlaceGitHub)" />
+    </div>
+    <div class="mb-3">
+        <label>Enlace de LinkedIn:</label>
+        <InputText class="form-control" @bind-Value="PerfilProfesional.EnlaceLinkedIn" />
+        <ValidationMessage For="@(() => PerfilProfesional.EnlaceLinkedIn)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+</EditForm>
+
+@code {
+    private EditContext editContext = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public perfilprofesionalmodel PerfilProfesional { get; set; } = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback ReturnAction { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(PerfilProfesional);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!editContext.IsModified() || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Deseas abandonar la página y perder los cambios?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value))
+        {
+            context.PreventNavigation();
+        }
+    }
+}

@@ -1,0 +1,86 @@
+﻿@inject SweetAlertService swal
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Título:</label>
+        <InputText class="form-control" @bind-Value="Publicacion.Titulo" />
+        <ValidationMessage For="@(() => Publicacion.Titulo)" />
+    </div>
+    <div class="mb-3">
+        <label>Descripción:</label>
+        <InputTextArea class="form-control" @bind-Value="Publicacion.Descripcion" />
+        <ValidationMessage For="@(() => Publicacion.Descripcion)" />
+    </div>
+    <div class="mb-3">
+        <label>Área de sistemas:</label>
+        <InputText class="form-control" @bind-Value="Publicacion.AreaSistemas" />
+        <ValidationMessage For="@(() => Publicacion.AreaSistemas)" />
+    </div>
+    <div class="mb-3">
+        <label>Tipo de oferta:</label>
+        <InputText class="form-control" @bind-Value="Publicacion.TipoOferta" />
+        <ValidationMessage For="@(() => Publicacion.TipoOferta)" />
+    </div>
+    <div class="mb-3">
+        <label>Presupuesto o salario:</label>
+        <InputNumber class="form-control" @bind-Value="Publicacion.PresupuestoOSalario" />
+        <ValidationMessage For="@(() => Publicacion.PresupuestoOSalario)" />
+    </div>
+    <div class="mb-3">
+        <label>Id de usuario:</label>
+        <InputNumber class="form-control" @bind-Value="Publicacion.UserId" />
+        <ValidationMessage For="@(() => Publicacion.UserId)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+</EditForm>
+
+@code {
+    private EditContext editContext = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public PublicacionModel Publicacion { get; set; } = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback ReturnAction { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Publicacion);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!editContext.IsModified() || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Deseas abandonar la página y perder los cambios?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value))
+        {
+            context.PreventNavigation();
+        }
+    }
+}

@@ -1,0 +1,30 @@
+﻿@page "/aplicaciones/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear aplicación</h3>
+
+<AplicacionForm @ref="aplicacionForm" Aplicacion="aplicacion" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private AplicacionModel aplicacion = new();
+    private AplicacionForm aplicacionForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/aplicacion", aplicacion);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        aplicacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/aplicaciones");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/aplicaciones");
+}

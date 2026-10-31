@@ -1,0 +1,30 @@
+﻿@page "/publicaciones/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear publicación</h3>
+
+<PublicacionForm @ref="publicacionForm" Publicacion="publicacion" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private PublicacionModel publicacion = new();
+    private PublicacionForm publicacionForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/publicacion", publicacion);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        publicacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/publicaciones");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/publicaciones");
+}

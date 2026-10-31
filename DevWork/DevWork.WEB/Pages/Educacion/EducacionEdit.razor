@@ -1,0 +1,70 @@
+﻿@page "/educacion/edit/{Id:int}"
+
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService swal
+
+<h3>Editar educación</h3>
+
+@if (educacion is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <EducacionForm @ref="educacionForm"
+                   Educacion="educacion"
+                   OnSubmit="Edit"
+                   ReturnAction="Return" />
+}
+
+@code {
+    private EducacionModel? educacion;
+    private EducacionForm educacionForm = null!;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await repository.GetAsync<EducacionModel>(
+            $"/api/educacion/{Id}");
+
+        if (response.Error)
+        {
+            if (response.HttpResponseMessage.StatusCode ==
+                System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/educacion");
+                return;
+            }
+
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        educacion = response.Response;
+    }
+
+    private async Task Edit()
+    {
+        var response = await repository.PutAsync("/api/educacion", educacion);
+
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        educacionForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/educacion");
+    }
+
+    private void Return()
+    {
+        navigationManager.NavigateTo("/educacion");
+    }
+}
+ 

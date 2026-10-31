@@ -1,0 +1,30 @@
+﻿@page "/preguntas/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear pregunta</h3>
+
+<PreguntaForm @ref="preguntaForm" Pregunta="pregunta" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private PreguntaModel pregunta = new();
+    private PreguntaForm preguntaForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/pregunta", pregunta);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        preguntaForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/preguntas");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/preguntas");
+}

@@ -1,0 +1,163 @@
+﻿@page "/certificaciones"
+@inject IRepository repository
+<h3>Certificacion</h3>
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/Preguntas/Create">New Pregunta</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="certificaciones">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>PerfilProfesionalId</th>
+                    <th>Nombre</th>
+                    <th>EnteEmisor</th>
+                    <th>FechaObtencion</th>
+                    <th>UrlCreedencial</th>
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var certificacion in certificaciones!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @certificacion.Id
+
+                        </td>
+
+                        <td>
+
+                            @certificacion.PerfilProfesionalId
+
+                        </td>
+                        <td>
+
+                            @certificacion.Nombre
+
+                        </td>
+                        <td>
+
+                            @certificacion.EnteEmisor
+
+                        </td>
+                        <td>
+
+                            @certificacion.FechaObtencion
+
+                        </td>
+                        <td>
+
+                            @certificacion.UrlCredencial
+
+                        </td>
+
+                        
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<CertificacionModel>? certificaciones { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<CertificacionModel>>("/api/certificaciones");
+
+        certificaciones = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+
+
+
+
+
+

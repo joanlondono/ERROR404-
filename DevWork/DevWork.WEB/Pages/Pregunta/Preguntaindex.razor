@@ -1,0 +1,149 @@
+﻿@page "/preguntas"
+
+@inject IRepository repository
+
+
+
+<h3>Pregunta</h3>
+
+<div class="mb-3">
+
+ 
+
+ 
+
+    <a class="btn btn-primary " href="/Preguntas/Create">New Pregunta</a>
+
+ 
+
+</div>
+
+ 
+
+<GenericList MyList="Preguntas">
+
+
+    <Body>
+
+        <table class="table table-striped">
+
+            <thead>
+
+                <tr>
+
+                    <th>Id</th>
+
+                    <th>PublicacionId</th>
+                    <th>TextoPregunta</th>
+                   
+
+                   
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var pregunta in Preguntas!)
+
+                {
+
+                    <tr>
+
+                         
+
+                        <td>
+
+                            @pregunta.Id
+
+                        </td>
+
+                        <td>
+
+                            @pregunta.PublicacionId
+
+                        </td>
+                        <td>
+
+                            @pregunta.TextoPregunta
+
+                        </td> 
+
+                        
+                        <td>
+
+                            <a class="btn btn-warning">Editar</a>
+
+                            <button class="btn btn-danger">Borrar</button>
+
+                        </td>
+
+ 
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+ 
+
+    </Body>
+
+  
+
+</GenericList>
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+@code {
+
+ 
+
+ 
+
+    public List<PreguntaModel>? Preguntas { get; set; }
+
+
+
+    protected async override Task OnInitializedAsync()
+
+    {
+
+        var responseHppt = await repository.GetAsync<List<PreguntaModel>>("/api/preguntas");
+
+        Preguntas = responseHppt.Response!;
+
+ 
+
+ 
+
+ 
+
+ 
+
+    }
+
+}
+
+ 
+
+
+
+
+
+
+
+
+

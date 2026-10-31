@@ -1,0 +1,86 @@
+﻿@inject SweetAlertService swal
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Id de perfil profesional:</label>
+        <InputNumber class="form-control" @bind-Value="Experiencia.PerfilProfesionalId" />
+        <ValidationMessage For="@(() => Experiencia.PerfilProfesionalId)" />
+    </div>
+    <div class="mb-3">
+        <label>Cargo:</label>
+        <InputText class="form-control" @bind-Value="Experiencia.Cargo" />
+        <ValidationMessage For="@(() => Experiencia.Cargo)" />
+    </div>
+    <div class="mb-3">
+        <label>Empresa:</label>
+        <InputText class="form-control" @bind-Value="Experiencia.Empresa" />
+        <ValidationMessage For="@(() => Experiencia.Empresa)" />
+    </div>
+    <div class="mb-3">
+        <label>Descripción:</label>
+        <InputTextArea class="form-control" @bind-Value="Experiencia.Descripcion" />
+        <ValidationMessage For="@(() => Experiencia.Descripcion)" />
+    </div>
+    <div class="mb-3">
+        <label>Fecha de inicio:</label>
+        <InputDate class="form-control" @bind-Value="Experiencia.FechaInicio" />
+        <ValidationMessage For="@(() => Experiencia.FechaInicio)" />
+    </div>
+    <div class="mb-3">
+        <label>Fecha de finalización:</label>
+        <InputDate class="form-control" @bind-Value="Experiencia.FechaFin" />
+        <ValidationMessage For="@(() => Experiencia.FechaFin)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Guardar</button>
+    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
+</EditForm>
+
+@code {
+    private EditContext editContext = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public Experienciaprofesionalmodel Experiencia { get; set; } = null!;
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public EventCallback ReturnAction { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Experiencia);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!editContext.IsModified() || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Deseas abandonar la página y perder los cambios?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value))
+        {
+            context.PreventNavigation();
+        }
+    }
+}

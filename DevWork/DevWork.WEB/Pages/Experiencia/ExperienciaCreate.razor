@@ -1,0 +1,30 @@
+﻿@page "/experiencias/create"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear experiencia</h3>
+
+<ExperienciaForm @ref="experienciaForm" Experiencia="experiencia" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private Experienciaprofesionalmodel experiencia = new();
+    private ExperienciaForm experienciaForm = null!;
+
+    private async Task Create()
+    {
+        var response = await repository.PostAsync("/api/experiencia", experiencia);
+        if (response.Error)
+        {
+            var message = await response.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+
+        experienciaForm.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/ExperienciaProfesional");
+    }
+
+    private void Return() => navigationManager.NavigateTo("/ExperienciaProfesional");
+}
