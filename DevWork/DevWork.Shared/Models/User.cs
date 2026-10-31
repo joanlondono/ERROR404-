@@ -6,14 +6,8 @@ using System.Text;
 
 namespace DevWork.Shared.Models
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<int>
     {
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "El correo electrónico es obligatorio")]
-        [EmailAddress(ErrorMessage = "El correo electrónico no es válido")]
-        [StringLength(100, ErrorMessage = "El correo electrónico no puede tener más de 100 caracteres")]
-        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [MaxLength(25, ErrorMessage = "La contraseña no puede tener más de 25 caracteres")]
