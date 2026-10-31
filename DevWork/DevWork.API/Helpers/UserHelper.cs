@@ -9,10 +9,10 @@ namespace DevWork.API.Helpers
     {
         private readonly DataContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly SignInManager<User> _signInManager;
 
-        public UserHelper(DataContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, SignInManager<User> signInManager)
+        public UserHelper(DataContext context, UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signInManager)
         {
             _context = context;
             _userManager = userManager;
@@ -36,34 +36,27 @@ namespace DevWork.API.Helpers
             bool roleExists = await _roleManager.RoleExistsAsync(roleName);
             if (!roleExists)
             {
-                await _roleManager.CreateAsync(new IdentityRole
+                await _roleManager.CreateAsync(new Role
                 {
                     Name = roleName
                 });
             }
         }
 
-        public async Task<User> GetUserAsync(string email)
+        public async Task<User?> GetUserAsync(string email)
         {
-            return await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == email);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<bool> IsUserInRoleAsync(User user, string roleName)
         {
             return await _userManager.IsInRoleAsync(user, roleName);
         }
-
-        public async Task<SignInResult> LoginAsync(LoginDTO model)
-        {
-            return await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-        }
-
+      
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
-
-
         }
+
     }
 }
