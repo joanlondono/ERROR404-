@@ -1,4 +1,6 @@
 ﻿@page "/ExperienciaProfesional"
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
 @inject IRepository repository
 <h3>Experienciaindex</h3>
 <div class="mb-3">
@@ -69,9 +71,8 @@
                         
                         <td>
 
-                            <a class="btn btn-warning">Editar</a>
-
-                            <button class="btn btn-danger">Borrar</button>
+                            <a href="/Experiencias/edit/@experiencia.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(experiencia))>Borrar</button>
 
                         </td>
 
@@ -104,31 +105,54 @@
  
 
 @code {
-
- 
-
- 
-
-    public List<Experienciaprofesionalmodel>? Experienciaprofesional { get; set; }
-
-
+    public List<Experiencia> Experienciaprofesional { get; set; }
 
     protected async override Task OnInitializedAsync()
-
     {
+        await Load();
+    }
 
-        var responseHppt = await repository.GetAsync<List<Experienciaprofesionalmodel>>("/api/experiencias");
-
+    private async Task Load()
+    {
+        var responseHppt = await repository.GetAsync<List<Experiencia>>("/api/experiencias");
         Experienciaprofesional = responseHppt.Response!;
+    }
 
- 
+    private async Task DeleteAsync(Experiencia Experiencia)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Esta seguro que quieres borrar el registro?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
 
- 
+        var confirm = string.IsNullOrEmpty(result.Value);
 
- 
+        if (confirm)
+        {
+            return;
+        }
 
- 
+        var responseHTTP = await repository.DeleteAsync($"api/Experiencias/{Experiencia.Id}");
 
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/experiencias");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
     }
 
 }

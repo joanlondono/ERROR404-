@@ -1,6 +1,7 @@
 ﻿@page "/Perfiles" 
 
-
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
 
 @inject IRepository repository
 
@@ -102,9 +103,8 @@
                         
                       <td>
 
-                            <a class="btn btn-warning">Editar</a>
-
-                            <button class="btn btn-danger">Borrar</button>
+                            <a href="/PerfilesProfesionales/edit/@PF.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(PF))>Borrar</button>
 
                         </td>
 
@@ -138,32 +138,55 @@
 
 @code {
 
- 
-
- 
-
-    public List<perfilprofesionalmodel>? PerfilesProfesionales { get; set; }
-
-
+    public List<PerfilProfesional> PerfilesProfesionales { get; set; }
 
     protected async override Task OnInitializedAsync()
-
     {
-
-        var responseHppt = await repository.GetAsync<List<perfilprofesionalmodel>>("/api/perfiles-profesionales");
-
-        PerfilesProfesionales = responseHppt.Response!;
-
- 
-
- 
-
- 
-
- 
-
+        await Load();
     }
 
+    private async Task Load()
+    {
+        var responseHppt = await repository.GetAsync<List<PerfilProfesional>>("/api/PerfilesProfesionales");
+        PerfilesProfesionales = responseHppt.Response!;
+    }
+
+    private async Task DeleteAsync(PerfilProfesional PerfilProfesional)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Esta seguro que quieres borrar el registro?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHTTP = await repository.DeleteAsync($"api/PerfilesProfesionales/{PerfilProfesional.Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/perfiles-profesionales");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
+    }
 }
 
  

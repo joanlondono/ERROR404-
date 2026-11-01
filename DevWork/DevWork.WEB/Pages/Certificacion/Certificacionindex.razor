@@ -1,4 +1,6 @@
 ﻿@page "/certificaciones"
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
 @inject IRepository repository
 <h3>Certificacion</h3>
 <div class="mb-3">
@@ -7,7 +9,7 @@
 
  
 
-    <a class="btn btn-primary " href="/Preguntas/Create">New Pregunta</a>
+    <a class="btn btn-primary " href="/certificaciones/Create">New Certificacion</a>
 
  
 
@@ -85,9 +87,8 @@
                         
                         <td>
 
-                            <a class="btn btn-warning">Editar</a>
-
-                            <button class="btn btn-danger">Borrar</button>
+                            <a href="/certificaciones/edit/@certificacion.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(certificacion))>Borrar</button>
 
                         </td>
 
@@ -120,31 +121,54 @@
  
 
 @code {
-
- 
-
- 
-
     public List<CertificacionModel>? certificaciones { get; set; }
 
-
-
     protected async override Task OnInitializedAsync()
-
     {
+        await Load();
+    }
 
+    private async Task Load()
+    {
         var responseHppt = await repository.GetAsync<List<CertificacionModel>>("/api/certificaciones");
-
         certificaciones = responseHppt.Response!;
+    }
 
- 
+    private async Task DeleteAsync(CertificacionModel Certificacion)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Esta seguro que quieres borrar el registro?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
 
- 
+        var confirm = string.IsNullOrEmpty(result.Value);
 
- 
+        if (confirm)
+        {
+            return;
+        }
 
- 
+        var responseHTTP = await repository.DeleteAsync($"api/Certificaciones/{Certificacion.Id}");
 
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/certificaciones");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
     }
 
 }
