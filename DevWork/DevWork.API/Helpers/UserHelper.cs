@@ -1,6 +1,7 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
 using Microsoft.AspNetCore.Identity;
+using DevWork.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevWork.API.Helpers
@@ -24,6 +25,17 @@ namespace DevWork.API.Helpers
         public async Task<IdentityResult> AddUserAsync(User user, string password)
         {
             return await _userManager.CreateAsync(user, password);
+        }
+
+        public async Task<SignInResult> LoginAsync(LoginDTO model)
+        {
+            return await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
+        }
+
+        public async Task<string?> GetRoleNameAsync(int roleId)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId.ToString());
+            return role?.Name;
         }
 
         public async Task AddUserToRoleAsync(User user, string roleName)
@@ -52,7 +64,7 @@ namespace DevWork.API.Helpers
         {
             return await _userManager.IsInRoleAsync(user, roleName);
         }
-      
+
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
