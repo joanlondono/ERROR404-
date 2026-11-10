@@ -61,6 +61,7 @@ namespace DevWork.API.Controllers
             return BadRequest("Email o contraseña incorrectos.");
         }
 
+        
         private async Task<TokenDTO> BuildTokenAsync(User user)
         {
             var roleName = await _userHelper.GetRoleNameAsync(user.RoleId);

@@ -1,5 +1,7 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,8 @@ namespace DevWork.API.Controllers
 
         }
 
+        [AllowAnonymous]
+
         // Get por parámetro
         [HttpGet("{id:int}")]
         public async Task<ActionResult> Get(int id)
@@ -50,6 +54,7 @@ namespace DevWork.API.Controllers
 
         }
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
         [HttpPost]
         public async Task<ActionResult> Post(User users)
