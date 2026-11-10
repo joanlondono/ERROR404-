@@ -12,7 +12,7 @@ namespace DevWork.Shared.DTOs
         [Display(Name = "Contraseña")]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         [StringLength(20, MinimumLength = 6, ErrorMessage = "El campo {0} debe tener entre {2} y {1} carácteres.")]
-        public string Password { get; set; } = null!;
+        public new string Password { get; set; } = null!;
 
         [Compare("Password", ErrorMessage = "La contraseña y la confirmación no son iguales.")]
         [Display(Name = "Confirmación de contraseña")]

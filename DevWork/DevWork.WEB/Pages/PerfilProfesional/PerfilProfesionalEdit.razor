@@ -19,7 +19,7 @@ else
 }
 
 @code {
-    private perfilprofesionalmodel? perfilProfesional;
+    private PerfilProfesionalModel? perfilProfesional;
     private PerfilProfesionalForm perfilProfesionalForm = null!;
 
     [Parameter]
@@ -27,7 +27,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await repository.GetAsync<perfilprofesionalmodel>(
+        var response = await repository.GetAsync<PerfilProfesionalModel>(
             $"/api/perfilprofesional/{Id}");
 
         if (response.Error)

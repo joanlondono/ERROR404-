@@ -19,7 +19,7 @@ else
 }
 
 @code {
-    private Experienciaprofesionalmodel? experiencia;
+    private ExperienciaProfesionalModel? experiencia;
     private ExperienciaForm experienciaForm = null!;
 
     [Parameter]
@@ -27,7 +27,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await repository.GetAsync<Experienciaprofesionalmodel>(
+        var response = await repository.GetAsync<ExperienciaProfesionalModel>(
             $"/api/experiencia/{Id}");
 
         if (response.Error)
