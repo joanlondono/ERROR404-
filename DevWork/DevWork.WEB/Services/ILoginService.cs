@@ -1,6 +1,6 @@
 ﻿namespace DevWork.WEB.Services
 {
-    public class ILoginService
+    public interface ILoginService
     {
         Task LoginAsync(string token);
 

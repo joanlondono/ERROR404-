@@ -5,8 +5,7 @@ using Microsoft.JSInterop;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
-using DevWork.WEB.Helpers;
-using DevWork.WEB.Services;
+
 
 namespace DevWork.WEB.Pages.Auth
 {
