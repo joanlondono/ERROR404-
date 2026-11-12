@@ -1,5 +1,9 @@
 ﻿@page "/perfiles/create"
 
+@using DevWork.Shared.Models
+@using DevWork.WEB.Pages.PerfilProfesional
+@* Nota: Si guardaste PerfilProfesionalForm en otra carpeta, ajusta la línea de arriba con su namespace *@
+
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -14,17 +18,19 @@
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/perfilprofesional", perfil);
-        if (response.Error)
+        // CORREGIDO: Se usa ruta relativa limpia y en plural "api/perfilesprofesionales"
+        var responseHttp = await repository.PostAsync("api/perfilesprofesionales", perfil);
+        
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         perfilForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/Perfiles");
+        navigationManager.NavigateTo("Perfiles");
     }
 
-    private void Return() => navigationManager.NavigateTo("/Perfiles");
+    private void Return() => navigationManager.NavigateTo("Perfiles");
 }

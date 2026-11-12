@@ -141,7 +141,19 @@
 
     private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<UserModel>>("/api/Users");
+        // 1. Realizamos la petición HTTP
+        var responseHppt = await repository.GetAsync<List<UserModel>>("api/Users");
+
+        // 2. ¡Validamos primero si el repositorio marca un error!
+        if (responseHppt.Error)
+        {
+            var mensajeError = await responseHppt.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudieron cargar los usuarios: {mensajeError}", SweetAlertIcon.Error);
+            Users = new List<UserModel>(); // Inicializamos la lista vacía para evitar que la UI colapse
+            return;
+        }
+
+        // 3. Si todo está correcto, asignamos la lista segura
         Users = responseHppt.Response!;
     }
 

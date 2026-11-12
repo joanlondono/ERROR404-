@@ -9,7 +9,7 @@
 
  
 
-    <a class="btn btn-primary " href="/Experienciaprofesional/Create">New Experiencia</a>
+    <a class="btn btn-primary " href="/ExperienciaProfesional/Create">New Experiencia</a>
 
  
 
@@ -105,43 +105,50 @@
  
 
 @code {
-    public List<Experiencia> Experienciaprofesional { get; set; }
+    // Cambia 'experiencias' por 'Experienciaprofesional' en estas 4 líneas:
+    public List<Experiencia>? Experienciaprofesional { get; set; }
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await Load();
     }
 
     private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<Experiencia>>("/api/experiencias");
-        Experienciaprofesional = responseHppt.Response!;
+        var responseHttp = await repository.GetAsync<List<Experiencia>>("api/experiencias");
+        if (responseHttp.Error)
+        {
+            var mensajeError = await responseHttp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudo cargar la experiencia: {mensajeError}", SweetAlertIcon.Error);
+            Experienciaprofesional = new List<Experiencia>();
+            return;
+        }
+
+        Experienciaprofesional = responseHttp.Response!;
     }
 
-    private async Task DeleteAsync(Experiencia Experiencia)
+    private async Task DeleteAsync(Experiencia item)
     {
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar el registro?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
         var confirm = string.IsNullOrEmpty(result.Value);
-
         if (confirm)
         {
             return;
         }
 
-        var responseHTTP = await repository.DeleteAsync($"api/Experiencias/{Experiencia.Id}");
-
+        var responseHTTP = await repository.DeleteAsync($"api/experiencias/{item.Id}");
         if (responseHTTP.Error)
         {
             if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/experiencias");
+                navigationManager.NavigateTo("ExperienciaProfesional");
             }
             else
             {
@@ -154,8 +161,4 @@
             await Load();
         }
     }
-
 }
-
-
-

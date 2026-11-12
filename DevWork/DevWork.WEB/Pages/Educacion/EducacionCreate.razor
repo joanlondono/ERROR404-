@@ -1,5 +1,5 @@
 ﻿@page "/educacion/create"
-
+@using DevWork.Shared.Models
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -9,22 +9,22 @@
 <EducacionForm @ref="educacionForm" Educacion="educacion" OnSubmit="Create" ReturnAction="Return" />
 
 @code {
-    private EducacionModel educacion = new();
+    private Educacion educacion = new();
     private EducacionForm educacionForm = null!;
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/educacion", educacion);
-        if (response.Error)
+        var responseHttp = await repository.PostAsync("api/educaciones", educacion);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         educacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/educacion");
+        navigationManager.NavigateTo("educacion");
     }
 
-    private void Return() => navigationManager.NavigateTo("/educacion");
+    private void Return() => navigationManager.NavigateTo("educacion");
 }

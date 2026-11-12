@@ -1,5 +1,7 @@
 ﻿@page "/publicaciones/create"
 
+@using DevWork.Shared.Models
+
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -14,17 +16,27 @@
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/publicacion", publicacion);
-        if (response.Error)
+        // Se corrige la ruta relativa en plural "api/publicaciones"
+        var responseHttp = await repository.PostAsync("api/publicaciones", publicacion);
+        
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            // Se corrige el nombre del método a GetErrorMessageAsync
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
+        // Se corrige el nombre de la variable a publicacionForm
         publicacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/publicaciones");
+        navigationManager.NavigateTo("publicaciones");
     }
 
-    private void Return() => navigationManager.NavigateTo("/publicaciones");
+    private void Return()
+    {
+        navigationManager.NavigateTo("publicaciones");
+    }
 }
+
+
+

@@ -10,7 +10,9 @@ namespace DevWork.API.Controllers
 {
 
     [ApiController]
-    [Route("/api/user")]
+    [Route("/api/users")]
+
+    [AllowAnonymous]
     public class UserController : ControllerBase
     {
         private readonly DataContext _context;
@@ -54,24 +56,38 @@ namespace DevWork.API.Controllers
 
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AllowAnonymous]
 
         [HttpPost]
         public async Task<ActionResult> Post(User users)
         {
-            _context.Add(users);
-            await _context.SaveChangesAsync();
-            return Ok(users);
-
+            try{
+                _context.Add(users);
+                await _context.SaveChangesAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                // Si la base de datos rechaza el registro (ej: correo repetido), te avisará aquí
+                return BadRequest(ex.Message);
+            }
         }
 
+        [AllowAnonymous]
 
         [HttpPut]
         public async Task<ActionResult> Put(User users)
         {
-            _context.Add(users);
-            await _context.SaveChangesAsync();
-            return Ok(users);
+            try
+            {
+                _context.Add(users);
+                await _context.SaveChangesAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
         }
 

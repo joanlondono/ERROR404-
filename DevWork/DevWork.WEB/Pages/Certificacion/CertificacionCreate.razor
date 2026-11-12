@@ -1,5 +1,5 @@
 ﻿@page "/certificaciones/create"
-
+@using DevWork.Shared.Models
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -9,22 +9,22 @@
 <CertificacionForm @ref="certificacionForm" Certificacion="certificacion" OnSubmit="Create" ReturnAction="Return" />
 
 @code {
-    private CertificacionModel certificacion = new();
+    private Certificacion certificacion = new();
     private CertificacionForm certificacionForm = null!;
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/certificacion", certificacion);
-        if (response.Error)
+        var responseHttp = await repository.PostAsync("api/certificaciones", certificacion);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         certificacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/certificaciones");
+        navigationManager.NavigateTo("certificaciones");
     }
 
-    private void Return() => navigationManager.NavigateTo("/certificaciones");
+    private void Return() => navigationManager.NavigateTo("certificaciones");
 }

@@ -118,43 +118,49 @@
  
 
 @code {
-    public List<Aplicacion> aplicaciones { get; set; }
+    public List<Aplicacion>? aplicaciones { get; set; }
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await Load();
     }
 
     private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<Aplicacion>>("/api/Aplicaciones");
-        aplicaciones = responseHppt.Response!;
+        var responseHttp = await repository.GetAsync<List<Aplicacion>>("api/aplicaciones");
+        if (responseHttp.Error)
+        {
+            var mensajeError = await responseHttp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudieron cargar las aplicaciones: {mensajeError}", SweetAlertIcon.Error);
+            aplicaciones = new List<Aplicacion>();
+            return;
+        }
+
+        aplicaciones = responseHttp.Response!;
     }
 
-    private async Task DeleteAsync(Aplicacion Aplicacion)
+    private async Task DeleteAsync(Aplicacion aplicacion)
     {
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar el registro?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
         var confirm = string.IsNullOrEmpty(result.Value);
-
         if (confirm)
         {
             return;
         }
 
-        var responseHTTP = await repository.DeleteAsync($"api/Aplicaciones/{Aplicacion.Id}");
-
+        var responseHTTP = await repository.DeleteAsync($"api/aplicaciones/{aplicacion.Id}");
         if (responseHTTP.Error)
         {
             if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/aplicaciones");
+                navigationManager.NavigateTo("aplicaciones");
             }
             else
             {
@@ -167,20 +173,4 @@
             await Load();
         }
     }
-
-  
- 
-
-    }
-
-
-
- 
-
-
-
-
-
-
-
-
+}

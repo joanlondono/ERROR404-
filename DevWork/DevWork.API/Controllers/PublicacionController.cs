@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevWork.API.Controllers
 {
     [ApiController]
-    [Route("/api/publicacion")]
+    [Route("/api/publicaciones")]
     public class PublicacionController : ControllerBase
     {
         private readonly DataContext _context;

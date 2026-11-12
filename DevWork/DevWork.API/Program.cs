@@ -110,12 +110,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-
-app.UseAuthorization();
-
+// 1. PRIMERO: Habilitar CORS para que el navegador tenga permiso de hablar con la API
 app.UseCors("CorsPolicy");
 
+// 2. SEGUNDO: Validar quién es el usuario y qué permisos tiene
+app.UseAuthentication();
+app.UseAuthorization();
+
+// 3. TERCERO: Mapear los endpoints de los controladores
 app.MapControllers();
 
 app.Run();
+

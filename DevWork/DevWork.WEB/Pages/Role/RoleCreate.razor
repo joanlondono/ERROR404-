@@ -1,5 +1,5 @@
 ﻿@page "/roles/create"
-
+@using DevWork.Shared.Models
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -9,22 +9,22 @@
 <RoleForm @ref="roleForm" Role="role" OnSubmit="Create" ReturnAction="Return" />
 
 @code {
-    private RoleModel role = new();
+    private Role role = new();
     private RoleForm roleForm = null!;
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/role", role);
-        if (response.Error)
+        var responseHttp = await repository.PostAsync("api/roles", role);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         roleForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/roles");
+        navigationManager.NavigateTo("roles");
     }
 
-    private void Return() => navigationManager.NavigateTo("/roles");
+    private void Return() => navigationManager.NavigateTo("roles");
 }

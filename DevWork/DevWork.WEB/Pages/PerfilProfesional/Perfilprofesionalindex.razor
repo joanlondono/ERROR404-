@@ -1,38 +1,21 @@
-﻿@page "/Perfiles" 
-
+﻿@page "/Perfiles"
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
-
 @inject IRepository repository
 
 <h3>Perfil Profesional</h3>
+
 <div class="mb-3">
-
- 
-
- 
-
-    <a class="btn btn-primary " href="/PerfilesProfesionales/Create">New PerfilProfesional</a>
-
- 
-
+    <a class="btn btn-primary" href="perfiles/create">New PerfilProfesional</a>
 </div>
 
- 
-
 <GenericList MyList="PerfilesProfesionales">
-
-
     <Body>
-
         <table class="table table-striped">
-
             <thead>
-
                 <tr>
-
                     <th>Id</th>
-
                     <th>UserId</th>
                     <th>NombreCompleto</th>
                     <th>TituloProfesional</th>
@@ -42,139 +25,80 @@
                     <th>TarifaHora</th>
                     <th>EnlaceGithub</th>
                     <th>EnlaceLinkedin</th>
-                   
-
-                   
-
+                    <th>Acciones</th>
                 </tr>
-
             </thead>
-
             <tbody>
-
                 @foreach (var PF in PerfilesProfesionales!)
-
                 {
                     <tr>
-
-                    
-                         <td>
-
-                            @PF.Id
-
+                        <td>@PF.Id</td>
+                        <td>@PF.UserId</td>
+                        <td>@PF.NombreCompleto</td>
+                        <td>@PF.TituloProfesional</td>
+                        <td>@PF.Biografia</td>
+                        <td>@PF.HabilidadesTecnicas</td>
+                        <td>@PF.AreaEspecialidad</td>
+                        <td>@PF.TarifaHora</td>
+                        <td>@PF.EnlaceGitHub</td>
+                        <td>@PF.EnlaceLinkedIn</td>
+                        <td>
+                            <a href="perfiles/edit/@PF.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick="@(() => DeleteAsync(PF))">Borrar</button>
                         </td>
-
-                        <td>
-
-                            @PF.UserId
-
-                        </td>
-                        <td>
-                            @PF.NombreCompleto
-                            
-
-                        </td> 
-                        <td>
-                            @PF.TituloProfesional
-                            </td>
-                        <td>
-                            @PF.Biografia
-                            </td>
-                        <td>
-                            @PF.HabilidadesTecnicas
-                            </td>       
-                        <td>
-                            @PF.AreaEspecialidad
-                            </td>
-                        <td>
-                            @PF.TarifaHora
-                         </td>
-                         <td>
-                            @PF.EnlaceGitHub
-                        </td>
-                        <td>
-                            @PF.EnlaceLinkedIn
-                        </td>
-                         
-
-                      
-
-
-                        
-                      <td>
-
-                            <a href="/PerfilesProfesionales/edit/@PF.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(PF))>Borrar</button>
-
-                        </td>
-
- 
-
                     </tr>
-
                 }
-
             </tbody>
-
         </table>
-
- 
-
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
+    public List<PerfilProfesional>? PerfilesProfesionales { get; set; }
 
-    public List<PerfilProfesional> PerfilesProfesionales { get; set; }
-
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await Load();
     }
 
     private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<PerfilProfesional>>("/api/PerfilesProfesionales");
-        PerfilesProfesionales = responseHppt.Response!;
+        var responseHttp = await repository.GetAsync<List<PerfilProfesional>>("api/perfilesprofesionales");
+        
+        if (responseHttp.Error)
+        {
+            var mensajeError = await responseHttp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudieron cargar los perfiles: {mensajeError}", SweetAlertIcon.Error);
+            PerfilesProfesionales = new List<PerfilProfesional>();
+            return;
+        }
+
+        PerfilesProfesionales = responseHttp.Response!;
     }
 
-    private async Task DeleteAsync(PerfilProfesional PerfilProfesional)
+    private async Task DeleteAsync(PerfilProfesional perfilProfesional)
     {
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar el registro?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
         var confirm = string.IsNullOrEmpty(result.Value);
-
         if (confirm)
         {
             return;
         }
 
-        var responseHTTP = await repository.DeleteAsync($"api/PerfilesProfesionales/{PerfilProfesional.Id}");
+        var responseHTTP = await repository.DeleteAsync($"api/perfilesprofesionales/{perfilProfesional.Id}");
 
         if (responseHTTP.Error)
         {
             if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/perfiles-profesionales");
+                navigationManager.NavigateTo("Perfiles");
             }
             else
             {
@@ -188,6 +112,7 @@
         }
     }
 }
+
 
  
 

@@ -1,12 +1,14 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevWork.API.Controllers
 {
     [ApiController]
-    [Route("/api/pregunta")]
+    [Route("api/preguntas")]
+    [AllowAnonymous]
     public class PreguntaController : ControllerBase
     {
         private readonly DataContext _context;
@@ -19,40 +21,48 @@ namespace DevWork.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-
             return Ok(await _context.Preguntas.ToListAsync());
-
-
         }
 
-        [HttpGet("{Id:int}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult> Get(int id)
         {
-
             var pregunta = await _context.Preguntas.FirstOrDefaultAsync(x => x.Id == id);
             if (pregunta == null)
             {
-                return NotFound(); //404
+                return NotFound();
             }
             return Ok(pregunta);
-
-
         }
 
         [HttpPost]
         public async Task<ActionResult> Post(Pregunta pregunta)
         {
-            _context.Add(pregunta);
-            await _context.SaveChangesAsync();
-            return Ok(pregunta);
+            try
+            {
+                _context.Add(pregunta);
+                await _context.SaveChangesAsync();
+                return Ok(pregunta);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
         }
 
         [HttpPut]
         public async Task<ActionResult> Put(Pregunta pregunta)
         {
-            _context.Update(pregunta);
-            await _context.SaveChangesAsync();
-            return Ok(pregunta);
+            try
+            {
+                _context.Update(pregunta);
+                await _context.SaveChangesAsync();
+                return Ok(pregunta);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
         }
 
         [HttpDelete("{id:int}")]
@@ -61,23 +71,20 @@ namespace DevWork.API.Controllers
             var pregunta = await _context.Preguntas.FirstOrDefaultAsync(x => x.Id == id);
             if (pregunta == null)
             {
-                return NotFound(); //404
+                return NotFound();
             }
             _context.Remove(pregunta);
             await _context.SaveChangesAsync();
-            return NoContent(); //204
+            return NoContent();
         }
 
-
         [HttpPatch]
-
         public async Task<ActionResult> Patch(Pregunta pregunta)
         {
             _context.Update(pregunta);
             await _context.SaveChangesAsync();
             return Ok(pregunta);
-
         }
-
     }
 }
+

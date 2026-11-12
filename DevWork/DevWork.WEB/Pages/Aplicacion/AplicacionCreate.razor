@@ -1,5 +1,5 @@
 ﻿@page "/aplicaciones/create"
-
+@using DevWork.Shared.Models
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
@@ -9,22 +9,23 @@
 <AplicacionForm @ref="aplicacionForm" Aplicacion="aplicacion" OnSubmit="Create" ReturnAction="Return" />
 
 @code {
-    private AplicacionModel aplicacion = new();
+    private Aplicacion aplicacion = new();
     private AplicacionForm aplicacionForm = null!;
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/aplicacion", aplicacion);
-        if (response.Error)
+        var responseHttp = await repository.PostAsync("api/aplicaciones", aplicacion);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         aplicacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/aplicaciones");
+        navigationManager.NavigateTo("aplicaciones");
     }
 
-    private void Return() => navigationManager.NavigateTo("/aplicaciones");
+    private void Return() => navigationManager.NavigateTo("aplicaciones");
 }
+

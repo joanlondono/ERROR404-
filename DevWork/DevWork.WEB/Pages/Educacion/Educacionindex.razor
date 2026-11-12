@@ -1,164 +1,94 @@
 ﻿@page "/educacion"
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
 
- <h3>Educacion</h3>
+<h3>Educacion</h3>
+
 <div class="mb-3">
-
- 
-
- 
-
-    <a class="btn btn-primary " href="/educacion/Create">New Educacion</a>
-
- 
-
+    <a class="btn btn-primary" href="educacion/create">New Educacion</a>
 </div>
 
- 
-
-<GenericList MyList="educacion">
-
-
+<GenericList MyList="educaciones">
     <Body>
-
         <table class="table table-striped">
-
             <thead>
-
                 <tr>
-
                     <th>Id</th>
-
                     <th>PerfilProfesionalId</th>
                     <th>Titulo</th>
                     <th>Institucion</th>
                     <th>FechaInicio</th>
                     <th>FechaFin</th>
-
-                   
-
+                    <th>Acciones</th>
                 </tr>
-
             </thead>
-
             <tbody>
-
-                @foreach (var Educacion in educacion!)
-
+                @foreach (var item in educaciones!)
                 {
-
                     <tr>
-
-                         
-
+                        <td>@item.Id</td>
+                        <td>@item.PerfilProfesionalId</td>
+                        <td>@item.Titulo</td>
+                        <td>@item.Institucion</td>
+                        <td>@item.FechaInicio</td>
+                        <td>@item.FechaFin</td>
                         <td>
-
-                            @Educacion.Id
-
+                            <a href="educacion/edit/@item.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick="@(() => DeleteAsync(item))">Borrar</button>
                         </td>
-
-                        <td>
-
-                            @Educacion.PerfilProfesionalId
-
-                        </td>
-                        <td>
-
-                            @Educacion.Titulo
-
-                        </td>
-
-                        <td>
-
-                            @Educacion.Institucion
-
-                        </td>
-                        <td>
-
-                            @Educacion.FechaInicio
-
-                        </td>
-                        <td>
-
-                            @Educacion.FechaFin
-
-                        </td>
-                        <td>
-
-                            <a href="/educacion/edit/@Educacion.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(Educacion))>Borrar</button>
-
-                        </td>
-
- 
-
                     </tr>
-
                 }
-
             </tbody>
-
         </table>
-
- 
-
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
+    public List<Educacion>? educaciones { get; set; }
 
-    public List<Educacion> educacion { get; set; }
-
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         await Load();
     }
 
     private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<Educacion>>("/api/Educaciones");
-        educacion = responseHppt.Response!;
+        var responseHttp = await repository.GetAsync<List<Educacion>>("api/educaciones");
+        if (responseHttp.Error)
+        {
+            var mensajeError = await responseHttp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudo cargar la educación: {mensajeError}", SweetAlertIcon.Error);
+            educaciones = new List<Educacion>();
+            return;
+        }
+
+        educaciones = responseHttp.Response!;
     }
 
-    private async Task DeleteAsync(Educacion Educacion)
+    private async Task DeleteAsync(Educacion item)
     {
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar el registro?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
         var confirm = string.IsNullOrEmpty(result.Value);
-
         if (confirm)
         {
             return;
         }
 
-        var responseHTTP = await repository.DeleteAsync($"api/Educaciones/{Educacion.Id}");
-
+        var responseHTTP = await repository.DeleteAsync($"api/educaciones/{item.Id}");
         if (responseHTTP.Error)
         {
             if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/educacion");
+                navigationManager.NavigateTo("educacion");
             }
             else
             {
@@ -171,18 +101,4 @@
             await Load();
         }
     }
-
 }
-
- 
-
-
-
-
-
-
-
-
-
-
-

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevWork.API.Controllers
 {
     [ApiController]
-    [Route("/api/role")]
+    [Route("/api/roles")]
     public class RoleController : ControllerBase
     {
         private readonly DataContext _context;

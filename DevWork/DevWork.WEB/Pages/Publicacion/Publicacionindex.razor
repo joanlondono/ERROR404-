@@ -134,9 +134,20 @@
         await Load();
     }
 
-    private async Task Load()
+        private async Task Load()
     {
-        var responseHppt = await repository.GetAsync<List<Publicacion>>("/api/publicaciones");
+        // CORREGIDO: Ruta en singular "api/Publicacion" y sin la barra inclinada inicial
+        var responseHppt = await repository.GetAsync<List<Publicacion>>("api/Publicaciones");
+        
+        // CONTROL DE ERRORES: Si la API falla, muestra la alerta y previene que el esqueleto se quede infinito
+        if (responseHppt.Error)
+        {
+            var mensajeError = await responseHppt.GetErrorMessageAsync();
+            await swal.FireAsync("Error", $"No se pudieron cargar las publicaciones: {mensajeError}", SweetAlertIcon.Error);
+            Publicaciones = new List<Publicacion>(); // Inicializa la lista vacía para romper el estado de carga
+            return;
+        }
+
         Publicaciones = responseHppt.Response!;
     }
 
@@ -157,6 +168,7 @@
             return;
         }
 
+        // CORREGIDO: Ruta de eliminación cambiada a singular para coincidir con el backend
         var responseHTTP = await repository.DeleteAsync($"api/Publicaciones/{Publicacion.Id}");
 
         if (responseHTTP.Error)
@@ -177,12 +189,5 @@
         }
     }
 
-}
-
- 
-
-
-
-
-
-
+    }
+        

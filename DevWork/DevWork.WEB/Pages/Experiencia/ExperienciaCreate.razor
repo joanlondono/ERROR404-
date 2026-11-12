@@ -1,10 +1,10 @@
-﻿@page "/experiencias/create"
-
+﻿@page "/ExperienciaProfesional/create"
+@using DevWork.Shared.Models
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
 
-<h3>Crear experiencia</h3>
+<h3>Crear experiencia profesional</h3>
 
 <ExperienciaForm @ref="experienciaForm" Experiencia="experiencia" OnSubmit="Create" ReturnAction="Return" />
 
@@ -14,17 +14,19 @@
 
     private async Task Create()
     {
-        var response = await repository.PostAsync("/api/experiencia", experiencia);
-        if (response.Error)
+        var responseHttp = await repository.PostAsync("api/experiencias", experiencia);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", message);
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
         experienciaForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/ExperienciaProfesional");
+        navigationManager.NavigateTo("ExperienciaProfesional");
     }
 
-    private void Return() => navigationManager.NavigateTo("/ExperienciaProfesional");
+    private void Return() => navigationManager.NavigateTo("ExperienciaProfesional");
 }
+
+

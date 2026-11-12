@@ -1,13 +1,15 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevWork.API.Controllers
 {
     [ApiController]
-    [Route("/api/perfilprofesional")]
-    public class PerfilProfesionalController:ControllerBase
+    [Route("api/perfilesprofesionales")]
+    [AllowAnonymous]
+    public class PerfilProfesionalController : ControllerBase
     {
         private readonly DataContext _context;
 
@@ -15,44 +17,52 @@ namespace DevWork.API.Controllers
         {
             _context = context;
         }
-        
+
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-
             return Ok(await _context.PerfilProfesionales.ToListAsync());
-
-
         }
 
-        [HttpGet("{Id:int}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult> Get(int id)
         {
-
             var perfilprofesional = await _context.PerfilProfesionales.FirstOrDefaultAsync(x => x.Id == id);
             if (perfilprofesional == null)
             {
-                return NotFound(); //404
+                return NotFound();
             }
             return Ok(perfilprofesional);
-
-
         }
 
         [HttpPost]
         public async Task<ActionResult> Post(PerfilProfesional perfilprofesional)
         {
-            _context.Add(perfilprofesional);
-            await _context.SaveChangesAsync();
-            return Ok(perfilprofesional);
+            try
+            {
+                _context.Add(perfilprofesional);
+                await _context.SaveChangesAsync();
+                return Ok(perfilprofesional);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
         }
 
         [HttpPut]
         public async Task<ActionResult> Put(PerfilProfesional perfilprofesional)
         {
-            _context.Update(perfilprofesional);
-            await _context.SaveChangesAsync();
-            return Ok(perfilprofesional);
+            try
+            {
+                _context.Update(perfilprofesional);
+                await _context.SaveChangesAsync();
+                return Ok(perfilprofesional);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
         }
 
         [HttpDelete("{id:int}")]
@@ -61,64 +71,57 @@ namespace DevWork.API.Controllers
             var perfilprofesional = await _context.PerfilProfesionales.FirstOrDefaultAsync(x => x.Id == id);
             if (perfilprofesional == null)
             {
-                return NotFound(); //404
+                return NotFound();
             }
             _context.Remove(perfilprofesional);
             await _context.SaveChangesAsync();
-            return NoContent(); //204
+            return NoContent();
         }
 
-
         [HttpPatch]
-
         public async Task<ActionResult> Patch(PerfilProfesional perfilprofesional)
         {
             _context.Update(perfilprofesional);
             await _context.SaveChangesAsync();
             return Ok(perfilprofesional);
-
         }
 
         [HttpGet("filter")]
-
         public async Task<ActionResult> GetFiltered(string text)
         {
             var query = _context.PerfilProfesionales
-
                 .AsNoTracking()
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(text))
             {
                 text = text.Trim().ToLower();
-                query = query.Where( x =>  
+                query = query.Where(x =>
                     x.UserId.ToString().Contains(text) ||
                     x.NombreCompleto.ToLower().Contains(text) ||
                     x.TituloProfesional.ToLower().Contains(text));
-
-
-
-
             }
+
             var data = await query
                 .OrderBy(x => x.UserId)
                 .ThenBy(x => x.NombreCompleto)
                 .ToListAsync();
-            return Ok(data);
 
+            return Ok(data);
         }
 
-        [HttpGet("{id}:int/hateoas")]
+        [HttpGet("{id:int}/hateoas")]
         public async Task<ActionResult> GetWithLinks(int id)
         {
-
             var perfilprofesional = await _context.PerfilProfesionales
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
+
             if (perfilprofesional == null)
             {
-                return NotFound(); //404
+                return NotFound();
             }
+
             var response = new
             {
                 perfilprofesional,
@@ -129,8 +132,8 @@ namespace DevWork.API.Controllers
                     new { rel = "delete", href = Url.Action("Delete", new { id = perfilprofesional.Id }) }
                 }
             };
+
             return Ok(response);
         }
-
     }
 }
