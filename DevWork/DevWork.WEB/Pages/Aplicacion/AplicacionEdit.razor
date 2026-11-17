@@ -1,5 +1,5 @@
 ﻿@page "/aplicaciones/edit/{Id:int}"
-
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject IRepository repository
 @inject SweetAlertService swal
@@ -27,13 +27,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await repository.GetAsync<AplicacionModel>($"/api/aplicacion/{Id}");
+        var response = await repository.GetAsync<AplicacionModel>($"api/aplicaciones/{Id}");
 
         if (response.Error)
         {
             if (response.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/aplicaciones");
+                navigationManager.NavigateTo("aplicaciones");
                 return;
             }
 
@@ -47,7 +47,7 @@ else
 
     private async Task Edit()
     {
-        var response = await repository.PutAsync("/api/aplicacion", Aplicacion);
+        var response = await repository.PutAsync("api/aplicaciones", Aplicacion);
 
         if (response.Error)
         {
@@ -57,15 +57,11 @@ else
         }
 
         aplicacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/aplicaciones");
+        navigationManager.NavigateTo("aplicaciones");
     }
 
     private void Return()
     {
-        navigationManager.NavigateTo("/aplicaciones");
+        navigationManager.NavigateTo("aplicaciones");
     }
-}<h3>AplicacionEdit</h3>
-
-@code {
-
 }

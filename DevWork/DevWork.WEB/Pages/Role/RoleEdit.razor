@@ -1,10 +1,10 @@
 ﻿@page "/roles/edit/{Id:int}"
-
-@inject NavigationManager navigationManager
+@using DevWork.Shared.Models
 @inject IRepository repository
-@inject SweetAlertService swal
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
 
-<h3>Editar rol</h3>
+<h3>Editar Rol</h3>
 
 @if (role is null)
 {
@@ -12,14 +12,11 @@
 }
 else
 {
-    <RoleForm @ref="roleForm"
-              Role="role"
-              OnSubmit="Edit"
-              ReturnAction="Return" />
+    <RoleForm @ref="roleForm" Role="role" OnSubmit="Edit" ReturnAction="Return" />
 }
 
 @code {
-    private RoleModel? role;
+    private Role? role;
     private RoleForm roleForm = null!;
 
     [Parameter]
@@ -27,43 +24,38 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await repository.GetAsync<RoleModel>($"/api/role/{Id}");
-
-        if (response.Error)
+        var responseHttp = await repository.GetAsync<Role>($"api/roles/{Id}");
+        if (responseHttp.Error)
         {
-            if (response.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (responseHttp.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("/roles");
-                return;
+                navigationManager.NavigateTo("roles");
             }
-
-            var message = await response.GetErrorMessageAsync();
-            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
-            return;
+            else
+            {
+                var messageError = await responseHttp.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            }
         }
-
-        role = response.Response;
+        else
+        {
+            role = responseHttp.Response;
+        }
     }
 
     private async Task Edit()
     {
-        var response = await repository.PutAsync("/api/role", role);
-
-        if (response.Error)
+        var responseHttp = await repository.PutAsync("api/roles", role);
+        if (responseHttp.Error)
         {
-            var message = await response.GetErrorMessageAsync();
-            await swal.FireAsync("Error", message, SweetAlertIcon.Error);
+            var messageError = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
             return;
         }
 
         roleForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("/roles");
+        navigationManager.NavigateTo("roles");
     }
 
-    private void Return()
-    {
-        navigationManager.NavigateTo("/roles");
-    }
+    private void Return() => navigationManager.NavigateTo("roles");
 }
-
- 
