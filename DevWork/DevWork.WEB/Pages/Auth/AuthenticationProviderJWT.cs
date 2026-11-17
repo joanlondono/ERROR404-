@@ -6,14 +6,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 
-
 namespace DevWork.WEB.Pages.Auth
 {
     public class AuthenticationProviderJWT : AuthenticationStateProvider, ILoginService
     {
         private readonly IJSRuntime _jSRuntime;
         private readonly HttpClient _httpClient;
-        private readonly String _tokenKey;
+        private readonly string _tokenKey;
         private readonly AuthenticationState _anonimous;
 
         public AuthenticationProviderJWT(IJSRuntime jSRuntime, HttpClient httpClient)
@@ -47,7 +46,6 @@ namespace DevWork.WEB.Pages.Auth
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
             var unserializedToken = jwtSecurityTokenHandler.ReadJwtToken(token);
             return unserializedToken.Claims;
-
         }
 
         public async Task LoginAsync(string token)

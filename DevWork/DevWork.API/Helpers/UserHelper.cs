@@ -40,6 +40,7 @@ namespace DevWork.API.Helpers
 
         public async Task AddUserToRoleAsync(User user, string roleName)
         {
+            await CheckRoleAsync(roleName);
             await _userManager.AddToRoleAsync(user, roleName);
         }
 

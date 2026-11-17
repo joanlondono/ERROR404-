@@ -9,7 +9,6 @@ namespace DevWork.Shared.Models
     public class User : IdentityUser<int>
     {
 
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
         [MaxLength(25, ErrorMessage = "La contraseña no puede tener más de 25 caracteres")]
         public string Password { get; set; } = string.Empty;
 
