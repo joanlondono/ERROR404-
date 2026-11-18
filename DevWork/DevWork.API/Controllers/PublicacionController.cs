@@ -1,5 +1,7 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +9,7 @@ namespace DevWork.API.Controllers
 {
     [ApiController]
     [Route("/api/publicaciones")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PublicacionController : ControllerBase
     {
         private readonly DataContext _context;
@@ -16,6 +19,7 @@ namespace DevWork.API.Controllers
             _context = context;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult> Get()
         {

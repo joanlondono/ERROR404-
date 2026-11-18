@@ -14,5 +14,9 @@ namespace DevWork.Shared.Models
 
         [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar un rol válido")]
         public int RoleId { get; set; }
+
+        [Display(Name = "Foto")]
+        public string? Photo { get; set; }
     }
+
 }

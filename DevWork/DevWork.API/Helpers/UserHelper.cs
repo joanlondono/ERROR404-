@@ -1,7 +1,7 @@
 ﻿using DevWork.API.Data;
+using DevWork.Shared.DTOs;
 using DevWork.Shared.Models;
 using Microsoft.AspNetCore.Identity;
-using DevWork.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevWork.API.Helpers
@@ -19,9 +19,8 @@ namespace DevWork.API.Helpers
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
-
-
         }
+
         public async Task<IdentityResult> AddUserAsync(User user, string password)
         {
             return await _userManager.CreateAsync(user, password);
@@ -71,5 +70,19 @@ namespace DevWork.API.Helpers
             await _signInManager.SignOutAsync();
         }
 
+        public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
+        {
+            return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        }
+
+        public async Task<IdentityResult> ConfirmEmailAsync(User user, string token)
+        {
+            return await _userManager.ConfirmEmailAsync(user, token);
+        }
+
+        public async Task<User?> GetUserAsync(int userId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        }
     }
 }

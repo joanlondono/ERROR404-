@@ -1,5 +1,6 @@
 ﻿using DevWork.API.Data;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ namespace DevWork.API.Controllers
 {
     [ApiController]
     [Route("api/perfilesprofesionales")]
-    [AllowAnonymous]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PerfilProfesionalController : ControllerBase
     {
         private readonly DataContext _context;

@@ -11,9 +11,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddSwaggerGen(c =>
@@ -41,12 +39,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<SeedDb>();
 
 builder.Services.AddIdentity<User, Role>(x =>
 {
+    x.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
+    x.SignIn.RequireConfirmedEmail = true;
     x.User.RequireUniqueEmail = true;
     x.Password.RequireDigit = false;
     x.Password.RequiredUniqueChars = 0;
@@ -59,6 +58,7 @@ builder.Services.AddIdentity<User, Role>(x =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IUserHelper, UserHelper>();
+builder.Services.AddScoped<IMailHelper, MailHelper>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(x => x.TokenValidationParameters = new TokenValidationParameters
@@ -95,20 +95,18 @@ static async Task SeedDataAsync(WebApplication app)
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
-
 {
-
     app.MapOpenApi();
-
     app.UseSwaggerUI(options =>
-
     {
         options.SwaggerEndpoint("/openapi/v1.json", "DevWork.API v1");
     });
-
 }
 
 app.UseHttpsRedirection();
+
+// Habilitar archivos estáticos (wwwroot) para servir las fotos de perfil guardadas
+app.UseStaticFiles();
 
 // 1. PRIMERO: Habilitar CORS para que el navegador tenga permiso de hablar con la API
 app.UseCors("CorsPolicy");
@@ -121,4 +119,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-

@@ -1,7 +1,7 @@
-﻿using DevWork.Shared.Models;
+﻿using System.Threading.Tasks;
+using DevWork.Shared.Models;
 using DevWork.Shared.DTOs;
 using Microsoft.AspNetCore.Identity;
-
 
 namespace DevWork.API.Helpers
 {
@@ -23,5 +23,10 @@ namespace DevWork.API.Helpers
 
         Task LogoutAsync();
 
+        Task<string> GenerateEmailConfirmationTokenAsync(User user);
+
+        Task<IdentityResult> ConfirmEmailAsync(User user, string token);
+
+        Task<User?> GetUserAsync(int userId);
     }
 }
