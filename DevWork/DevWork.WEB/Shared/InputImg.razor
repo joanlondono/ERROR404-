@@ -1,7 +1,9 @@
-﻿<div>
+﻿@inject IJSRuntime JS
+
+<div>
     <label class="form-label">@Label</label>
     <div>
-        <InputFile OnChange="OnChange" accept=".jpg,.jpeg,.png" class="form-control" />
+        <input type="file" @ref="inputElement" @onchange="OnChange" accept=".jpg,.jpeg,.png" class="form-control" />
     </div>
 </div>
 
@@ -25,27 +27,19 @@
 </div>
 
 @code {
+    private ElementReference inputElement;
     private string? imageBase64;
 
     [Parameter] public string Label { get; set; } = "Imagen";
     [Parameter] public string? ImageURL { get; set; }
     [Parameter] public EventCallback<string> ImageSelected { get; set; }
 
-    private async Task OnChange(InputFileChangeEventArgs e)
+    private async Task OnChange()
     {
-        var imagenes = e.GetMultipleFiles();
-
-        foreach (var imagen in imagenes)
+        var base64 = await JS.InvokeAsync<string?>("resizeImage", inputElement, 500, 500);
+        if (!string.IsNullOrEmpty(base64))
         {
-            // Redimensiona la imagen en el navegador a máximo 500x500px (reduce el peso a ~50-100 KB)
-            var imagenRedimensionada = await imagen.RequestImageFileAsync("image/jpeg", 500, 500);
-
-            using var stream = imagenRedimensionada.OpenReadStream(maxAllowedSize: 5120000);
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-
-            var arrBytes = ms.ToArray();
-            imageBase64 = Convert.ToBase64String(arrBytes);
+            imageBase64 = base64;
             ImageURL = null;
             await ImageSelected.InvokeAsync(imageBase64);
             StateHasChanged();
