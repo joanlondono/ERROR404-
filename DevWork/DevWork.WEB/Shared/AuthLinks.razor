@@ -1,9 +1,23 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject IConfiguration Configuration
 
 <AuthorizeView>
     <Authorized>
-        <span>Hola, @context.User.Identity?.Name</span>
-        <a href="Logout" class="nav-link btn btn-link">Cerrar Sesión</a>
+        @{
+            var photo = context.User.Claims.FirstOrDefault(x => x.Type == "Photo")?.Value;
+            var apiUrl = Configuration["UrlAPI"] ?? "https://localhost:7087/";
+        }
+        <div class="d-flex align-items-center gap-2">
+            @if (!string.IsNullOrEmpty(photo))
+            {
+                <img src="@($"{apiUrl.TrimEnd('/')}/{photo.TrimStart('/')}")"
+                     alt="Foto de perfil"
+                     class="rounded-circle border"
+                     style="width: 36px; height: 36px; object-fit: cover;" />
+            }
+            <span>Hola, @context.User.Identity?.Name</span>
+            <a href="Logout" class="nav-link btn btn-link">Cerrar Sesión</a>
+        </div>
     </Authorized>
     <NotAuthorized>
         <a href="Register" class="nav-link btn btn-link">Registro</a>
