@@ -1,5 +1,5 @@
 ﻿@page "/certificaciones/edit/{Id:int}"
-@attribute [Authorize(Roles = "Admin,Administrador")]
+@attribute [Authorize]
 @using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject IRepository repository

@@ -1,40 +1,71 @@
-﻿@page "/educacion/edit/{Id:int}"
-@attribute [Authorize(Roles = "Admin,Administrador")]
+﻿@page "/experiencias/edit/{Id:int}"
+@attribute [Authorize]
 @using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject NavigationManager navigationManager
 @inject IRepository repository
 @inject SweetAlertService swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<h3>Editar educación</h3>
+<PageTitle>Editar Experiencia - DevWork</PageTitle>
 
-@if (educacion is null)
-{
-    <p>Cargando...</p>
-}
-else
-{
-    <EducacionForm @ref="educacionForm"
-                   Educacion="educacion"
-                   OnSubmit="Edit"
-                   ReturnAction="Return" />
-}
+<div class="mb-3">
+    <button type="button" class="btn btn-sm btn-outline-light" @onclick="Return">
+        ← Volver
+    </button>
+</div>
+
+<div class="mx-auto" style="max-width: 820px;">
+    <div class="p-4 p-md-5 rounded-4" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="mb-4 pb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+            <h3 class="fw-bold text-white mb-1">Editar Experiencia Profesional</h3>
+            <small style="color: #94A3B8;">Actualiza el cargo, empresa, fechas y descripción de tu trayectoria laboral</small>
+        </div>
+
+        @if (experiencia is null)
+        {
+            <div class="d-flex justify-content-center my-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        }
+        else
+        {
+            <ExperienciaForm @ref="experienciaForm"
+                             Experiencia="experiencia"
+                             OnSubmit="Edit"
+                             ReturnAction="Return" />
+        }
+    </div>
+</div>
 
 @code {
-    private EducacionModel? educacion;
-    private EducacionForm educacionForm = null!;
+    private ExperienciaProfesionalModel? experiencia;
+    private ExperienciaForm experienciaForm = null!;
+    private bool esAdmin = false;
 
     [Parameter]
     public int Id { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await repository.GetAsync<EducacionModel>($"api/educaciones/{Id}");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        esAdmin = user.IsInRole("Admin") || user.IsInRole("Administrador");
+        var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("UserId")?.Value
+                   ?? user.FindFirst("id")?.Value
+                   ?? user.FindFirst("sub")?.Value;
+        int.TryParse(idClaim, out int usuarioActualId);
+
+        var response = await repository.GetAsync<ExperienciaProfesionalModel>($"api/experiencias/{Id}");
 
         if (response.Error)
         {
             if (response.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("educacion");
+                Return();
                 return;
             }
 
@@ -43,12 +74,28 @@ else
             return;
         }
 
-        educacion = response.Response;
+        var expCargada = response.Response!;
+
+        // Si no es Admin, verificar que la experiencia pertenezca al perfil profesional del usuario actual
+        if (!esAdmin)
+        {
+            var respPerfiles = await repository.GetAsync<List<PerfilProfesionalModel>>("api/perfilesprofesionales");
+            var miPerfil = respPerfiles.Response?.FirstOrDefault(p => p.UserId == usuarioActualId);
+
+            if (miPerfil == null || expCargada.PerfilProfesionalId != miPerfil.Id)
+            {
+                await swal.FireAsync("Acceso denegado", "No tienes permiso para editar esta experiencia.", SweetAlertIcon.Warning);
+                navigationManager.NavigateTo("/Perfiles");
+                return;
+            }
+        }
+
+        experiencia = expCargada;
     }
 
     private async Task Edit()
     {
-        var response = await repository.PutAsync("api/educaciones", educacion);
+        var response = await repository.PutAsync("api/experiencias", experiencia);
 
         if (response.Error)
         {
@@ -57,12 +104,12 @@ else
             return;
         }
 
-        educacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("educacion");
+        experienciaForm.FormPostedSuccessfully = true;
+        Return();
     }
 
     private void Return()
     {
-        navigationManager.NavigateTo("educacion");
+        navigationManager.NavigateTo(esAdmin ? "/ExperienciaProfesional" : "/Perfiles");
     }
 }

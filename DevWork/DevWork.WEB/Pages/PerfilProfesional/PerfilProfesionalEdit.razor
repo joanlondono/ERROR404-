@@ -1,23 +1,43 @@
 ﻿@page "/perfiles/edit/{Id:int}"
 @attribute [Authorize]
 @using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject NavigationManager navigationManager
 @inject IRepository repository
 @inject SweetAlertService swal
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<h3>Editar perfil profesional</h3>
+<PageTitle>Editar Perfil Profesional - DevWork</PageTitle>
 
-@if (perfilProfesional is null)
-{
-    <p>Cargando...</p>
-}
-else
-{
-    <PerfilProfesionalForm @ref="perfilProfesionalForm"
-                           PerfilProfesional="perfilProfesional"
-                           OnSubmit="Edit"
-                           ReturnAction="Return" />
-}
+<div class="mb-3">
+    <a href="/Perfiles" class="btn btn-sm btn-outline-light">
+        ← Volver a Perfiles
+    </a>
+</div>
+
+<div class="mx-auto" style="max-width: 820px;">
+    <div class="p-4 p-md-5 rounded-4" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="mb-4 pb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+            <h3 class="fw-bold text-white mb-1">Editar Perfil Profesional</h3>
+            <small style="color: #94A3B8;">Actualiza tu información, habilidades técnicas, tarifa y enlaces de contacto</small>
+        </div>
+
+        @if (perfilProfesional is null)
+        {
+            <div class="d-flex justify-content-center my-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        }
+        else
+        {
+            <PerfilProfesionalForm @ref="perfilProfesionalForm"
+                                   PerfilProfesional="perfilProfesional"
+                                   OnSubmit="Edit"
+                                   ReturnAction="Return" />
+        }
+    </div>
+</div>
 
 @code {
     private PerfilProfesionalModel? perfilProfesional;
@@ -28,13 +48,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        bool esAdmin = user.IsInRole("Admin") || user.IsInRole("Administrador");
+        var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("UserId")?.Value
+                   ?? user.FindFirst("id")?.Value
+                   ?? user.FindFirst("sub")?.Value;
+        int.TryParse(idClaim, out int usuarioActualId);
+
         var response = await repository.GetAsync<PerfilProfesionalModel>($"api/perfilesprofesionales/{Id}");
 
         if (response.Error)
         {
             if (response.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                navigationManager.NavigateTo("Perfiles");
+                navigationManager.NavigateTo("/Perfiles");
                 return;
             }
 
@@ -43,7 +73,17 @@ else
             return;
         }
 
-        perfilProfesional = response.Response;
+        var perfilCargado = response.Response!;
+
+        // Bloquear acceso si intentó entrar por URL a un perfil ajeno
+        if (!esAdmin && perfilCargado.UserId != usuarioActualId)
+        {
+            await swal.FireAsync("Acceso denegado", "No tienes permiso para editar este perfil profesional.", SweetAlertIcon.Warning);
+            navigationManager.NavigateTo("/Perfiles");
+            return;
+        }
+
+        perfilProfesional = perfilCargado;
     }
 
     private async Task Edit()
@@ -58,11 +98,11 @@ else
         }
 
         perfilProfesionalForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("Perfiles");
+        navigationManager.NavigateTo("/Perfiles");
     }
 
     private void Return()
     {
-        navigationManager.NavigateTo("Perfiles");
+        navigationManager.NavigateTo("/Perfiles");
     }
 }
