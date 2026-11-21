@@ -33,5 +33,6 @@ namespace DevWork.Shared.Models
 
         [Required(ErrorMessage = "El ID de usuario es obligatorio")]
         public int UserId { get; set; }
+        public User? User { get; set; }
     }
 }

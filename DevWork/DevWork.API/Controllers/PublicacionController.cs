@@ -24,18 +24,27 @@ namespace DevWork.API.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
-            return Ok(await _context.Publicaciones.ToListAsync());
+            var publicaciones = await _context.Publicaciones
+                .Include(p => p.User)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+
+            return Ok(publicaciones);
         }
 
         [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<ActionResult> Get(int id)
         {
-            var publicacion = await _context.Publicaciones.FirstOrDefaultAsync(x => x.Id == id);
+            var publicacion = await _context.Publicaciones
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
             if (publicacion == null)
             {
                 return NotFound();
             }
+
             return Ok(publicacion);
         }
 
@@ -50,11 +59,16 @@ namespace DevWork.API.Controllers
                     return Unauthorized("No se pudo identificar al usuario.");
                 }
 
-                // Si tu modelo Publicacion tiene UserId, lo asigna automáticamente
-                if (publicacion.UserId == 0)
+                var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
+
+                // Si no es Admin (o si viene en 0), forzamos el UserId del usuario autenticado
+                if (!esAdmin || publicacion.UserId <= 0)
                 {
                     publicacion.UserId = usuario.Id;
                 }
+
+                // Evitar que EF Core intente crear un usuario duplicado si viene el objeto User
+                publicacion.User = null;
 
                 _context.Add(publicacion);
                 await _context.SaveChangesAsync();
@@ -71,14 +85,31 @@ namespace DevWork.API.Controllers
         {
             try
             {
+                var existente = await _context.Publicaciones
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == publicacion.Id);
+
+                if (existente == null)
+                {
+                    return NotFound();
+                }
+
                 var usuario = await ObtenerUsuarioActualAsync();
                 if (usuario == null) return Unauthorized();
 
                 var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
-                if (publicacion.UserId != usuario.Id && !esAdmin)
+                if (existente.UserId != usuario.Id && !esAdmin)
                 {
                     return Forbid();
                 }
+
+                // Si no es Admin, conservar siempre el dueño original
+                if (!esAdmin)
+                {
+                    publicacion.UserId = existente.UserId;
+                }
+
+                publicacion.User = null;
 
                 _context.Update(publicacion);
                 await _context.SaveChangesAsync();
@@ -114,14 +145,27 @@ namespace DevWork.API.Controllers
         [HttpPatch]
         public async Task<ActionResult> Patch(Publicacion publicacion)
         {
+            var existente = await _context.Publicaciones
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == publicacion.Id);
+
+            if (existente == null) return NotFound();
+
             var usuario = await ObtenerUsuarioActualAsync();
             if (usuario == null) return Unauthorized();
 
             var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
-            if (publicacion.UserId != usuario.Id && !esAdmin)
+            if (existente.UserId != usuario.Id && !esAdmin)
             {
                 return Forbid();
             }
+
+            if (!esAdmin)
+            {
+                publicacion.UserId = existente.UserId;
+            }
+
+            publicacion.User = null;
 
             _context.Update(publicacion);
             await _context.SaveChangesAsync();

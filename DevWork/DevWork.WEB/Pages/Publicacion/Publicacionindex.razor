@@ -16,9 +16,14 @@
     </div>
     <AuthorizeView>
         <Authorized>
-            <a class="btn btn-primary shadow-sm px-4" href="/Publicaciones/Create">
-                + Nueva Publicación
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-light shadow-sm px-3" href="/mis-publicaciones">
+                    <i class="bi bi-folder-check me-1 text-primary"></i> Mis Publicaciones
+                </a>
+                <a class="btn btn-primary shadow-sm px-4" href="/Publicaciones/Create">
+                    + Nueva Publicación
+                </a>
+            </div>
         </Authorized>
     </AuthorizeView>
 </div>
@@ -41,21 +46,32 @@
         <div class="row g-4">
             @foreach (var publicacion in PublicacionesFiltradas!)
             {
+                var esMia = (usuarioActualId > 0 && publicacion.UserId == usuarioActualId) ||
+                            (!string.IsNullOrEmpty(usuarioActualEmail) &&
+                             string.Equals(publicacion.User?.Email, usuarioActualEmail, StringComparison.OrdinalIgnoreCase));
+
                 <div class="col-md-6 col-xl-4">
                     <div class="pub-card h-100 d-flex flex-column justify-content-between p-4">
                         <div class="pub-card-body">
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                @if (!string.IsNullOrWhiteSpace(publicacion.AreaSistemas))
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if (!string.IsNullOrWhiteSpace(publicacion.AreaSistemas))
+                                    {
+                                        <span class="pub-badge-area" title="@publicacion.AreaSistemas">
+                                            @publicacion.AreaSistemas
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(publicacion.TipoOferta))
+                                    {
+                                        <span class="pub-badge-oferta" title="@publicacion.TipoOferta">
+                                            @publicacion.TipoOferta
+                                        </span>
+                                    }
+                                </div>
+
+                                @if (esMia)
                                 {
-                                    <span class="pub-badge-area" title="@publicacion.AreaSistemas">
-                                        @publicacion.AreaSistemas
-                                    </span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(publicacion.TipoOferta))
-                                {
-                                    <span class="pub-badge-oferta" title="@publicacion.TipoOferta">
-                                        @publicacion.TipoOferta
-                                    </span>
+                                    <span class="badge bg-primary" style="font-size: 0.68rem;">Tuya</span>
                                 }
                             </div>
 
@@ -83,7 +99,7 @@
                                 </a>
                             </div>
 
-                            @if (esAdmin || (usuarioActualId > 0 && publicacion.UserId == usuarioActualId))
+                            @if (esAdmin || esMia)
                             {
                                 <div class="d-flex gap-2 mt-2">
                                     <a href="/Publicaciones/edit/@publicacion.Id" class="btn btn-sm btn-warning flex-fill">
@@ -186,6 +202,7 @@
     public List<Publicacion> Publicaciones { get; set; } = new();
     private string filtroTexto = string.Empty;
     private int usuarioActualId = 0;
+    private string usuarioActualEmail = string.Empty;
     private bool esAdmin = false;
 
     private List<Publicacion> PublicacionesFiltradas =>
@@ -210,6 +227,11 @@
                        ?? user.FindFirst("id")?.Value
                        ?? user.FindFirst("sub")?.Value;
             int.TryParse(idClaim, out usuarioActualId);
+
+            usuarioActualEmail = user.Identity?.Name
+                ?? user.FindFirst(ClaimTypes.Email)?.Value
+                ?? user.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value
+                ?? string.Empty;
         }
 
         await Load();

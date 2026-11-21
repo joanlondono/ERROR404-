@@ -13,9 +13,11 @@ namespace DevWork.Shared.Models
         [Range(1, int.MaxValue, ErrorMessage = "El ID de la publicación es obligatorio")]
         [Required(ErrorMessage = "El ID de la publicación es obligatorio")]
         public int PublicacionId { get; set; }
+        public Publicacion? Publicacion { get; set; }
 
         // ID del perfil profesional o usuario que se postula (asignado automáticamente en el backend)
         public int PerfilProfesionalId { get; set; }
+        public PerfilProfesional? PerfilProfesional { get; set; }
 
         // Mensaje o propuesta que escribe el desarrollador
         [StringLength(200, ErrorMessage = "El mensaje de la propuesta no puede tener más de 200 caracteres")]

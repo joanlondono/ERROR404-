@@ -1,0 +1,275 @@
+﻿@page "/mis-publicaciones"
+@attribute [Authorize]
+@using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IRepository repository
+@inject SweetAlertService swal
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Mis Publicaciones y Candidatos - DevWork</PageTitle>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-white mb-1">Mis Publicaciones</h2>
+        <p class="mb-0" style="color: #94A3B8;">Administra tus ofertas creadas y gestiona los candidatos postulados</p>
+    </div>
+
+    <a href="/publicaciones/create" class="btn btn-primary px-4 py-2 fw-semibold">
+        + Nueva Publicación
+    </a>
+</div>
+
+@if (cargando)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else if (!misPublicaciones.Any())
+{
+    <div class="text-center p-5 rounded-4" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+        <i class="bi bi-folder2-open text-primary fs-1 mb-2 d-block"></i>
+        <h5 class="text-white fw-bold">Aún no has creado publicaciones</h5>
+        <p style="color: #94A3B8;">Publica tu primera oferta o proyecto para empezar a recibir postulaciones.</p>
+        <a href="/publicaciones/create" class="btn btn-primary px-4 mt-2">Crear mi primera publicación</a>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-4">
+        @foreach (var pub in misPublicaciones)
+        {
+            var postulantes = aplicacionesPorPublicacion.TryGetValue(pub.Id, out var lista) ? lista : new List<Aplicacion>();
+
+            <div class="p-4 rounded-4" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+                <!-- Cabecera de la oferta -->
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div style="min-width: 0; flex: 1;">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            @if (!string.IsNullOrWhiteSpace(pub.AreaSistemas))
+                            {
+                                <span class="badge rounded-pill px-3 py-1" style="background-color: rgba(255,255,255,0.06); color: #E2E8F0; border: 1px solid rgba(255,255,255,0.12);">
+                                    @pub.AreaSistemas
+                                </span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(pub.TipoOferta))
+                            {
+                                <span class="badge rounded-pill px-3 py-1" style="background-color: rgba(99, 102, 241, 0.15); color: #A5B4FC; border: 1px solid rgba(99, 102, 241, 0.35);">
+                                    @pub.TipoOferta
+                                </span>
+                            }
+                            @if (pub.PresupuestoOSalario > 0)
+                            {
+                                <span class="badge rounded-pill px-3 py-1" style="background-color: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.25);">
+                                    @pub.PresupuestoOSalario.ToString("C0")
+                                </span>
+                            }
+                        </div>
+
+                        <h4 class="fw-bold text-white mb-1" style="overflow-wrap: anywhere; word-break: break-word;">@pub.Titulo</h4>
+                        <p class="mb-0 small" style="color: #94A3B8; overflow-wrap: anywhere; word-break: break-word;">@pub.Descripcion</p>
+                    </div>
+
+                    <!-- Botones de acción sobre tu publicación -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/Publicaciones/detalle/@pub.Id" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-eye me-1"></i> Ver
+                        </a>
+                        <a href="/publicaciones/edit/@pub.Id" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => EliminarPublicacionAsync(pub)">
+                            <i class="bi bi-trash me-1"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="my-3" style="border-color: rgba(255,255,255,0.08);" />
+
+                <!-- Sección de Postulantes -->
+                <div>
+                    <h6 class="fw-bold text-white mb-3">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Postulaciones recibidas (@postulantes.Count)
+                    </h6>
+
+                    @if (!postulantes.Any())
+                    {
+                        <p class="small mb-0" style="color: #94A3B8;">Todavía no hay candidatos postulados a esta oferta.</p>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-2">
+                            @foreach (var app in postulantes)
+                            {
+                                <div class="p-3 rounded-3 d-flex flex-wrap justify-content-between align-items-center gap-3"
+                                     style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                                    <div style="flex: 1; min-width: 240px;">
+                                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                            <span class="fw-semibold text-white">
+                                                @(app.PerfilProfesional?.TituloProfesional ?? $"Candidato (Perfil #{app.PerfilProfesionalId})")
+                                            </span>
+                                            <span class="badge @ObtenerClaseEstado(app.Estado)">
+                                                @app.Estado
+                                            </span>
+                                            <small style="color: #64748B;">
+                                                @app.FechaPostulacion.ToString("dd/MM/yyyy")
+                                            </small>
+                                        </div>
+                                        <p class="mb-0 small" style="color: #CBD5E1; white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;">
+                                            @app.PropuestaMensaje
+                                        </p>
+                                    </div>
+
+                                    <!-- Botones Aceptar / Rechazar -->
+                                    <div class="d-flex gap-2">
+                                        @if (app.Estado != "Aceptada")
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-success px-3"
+                                                    @onclick='() => CambiarEstadoPostulacionAsync(app, "Aceptada")'>
+                                                <i class="bi bi-check-lg me-1"></i> Aceptar
+                                            </button>
+                                        }
+                                        @if (app.Estado != "Rechazada")
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger px-3"
+                                                    @onclick='() => CambiarEstadoPostulacionAsync(app, "Rechazada")'>
+                                                <i class="bi bi-x-lg me-1"></i> Rechazar
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Publicacion> misPublicaciones = new();
+    private Dictionary<int, List<Aplicacion>> aplicacionesPorPublicacion = new();
+    private bool cargando = true;
+    private int usuarioActualId = 0;
+    private string usuarioActualEmail = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("UserId")?.Value
+                   ?? user.FindFirst("id")?.Value
+                   ?? user.FindFirst("sub")?.Value;
+        int.TryParse(idClaim, out usuarioActualId);
+
+        usuarioActualEmail = user.Identity?.Name
+            ?? user.FindFirst(ClaimTypes.Email)?.Value
+            ?? user.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value
+            ?? string.Empty;
+
+        await CargarDatosAsync();
+    }
+
+    private async Task CargarDatosAsync()
+    {
+        cargando = true;
+        try
+        {
+            var respPubs = await repository.GetAsync<List<Publicacion>>("api/publicaciones");
+            if (!respPubs.Error && respPubs.Response != null)
+            {
+                misPublicaciones = respPubs.Response
+                    .Where(p => (usuarioActualId > 0 && p.UserId == usuarioActualId) ||
+                                (!string.IsNullOrEmpty(usuarioActualEmail) &&
+                                 string.Equals(p.User?.Email, usuarioActualEmail, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+
+            var respApps = await repository.GetAsync<List<Aplicacion>>("api/aplicaciones/recibidas");
+            if (!respApps.Error && respApps.Response != null)
+            {
+                var idsMisPubs = misPublicaciones.Select(p => p.Id).ToHashSet();
+                aplicacionesPorPublicacion = respApps.Response
+                    .Where(a => idsMisPubs.Contains(a.PublicacionId))
+                    .GroupBy(a => a.PublicacionId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+            }
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CambiarEstadoPostulacionAsync(Aplicacion app, string nuevoEstado)
+    {
+        var confirm = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = $"¿Marcar como {nuevoEstado}?",
+            Text = $"La postulación pasará a estado '{nuevoEstado}'.",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Sí, confirmar",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (string.IsNullOrEmpty(confirm.Value)) return;
+
+        var estadoAnterior = app.Estado;
+        app.Estado = nuevoEstado;
+
+        var resp = await repository.PutAsync("api/aplicaciones", app);
+        if (resp.Error)
+        {
+            app.Estado = estadoAnterior;
+            var msg = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", msg, SweetAlertIcon.Error);
+        }
+        else
+        {
+            await swal.FireAsync("Actualizado", $"La postulación fue marcada como {nuevoEstado}.", SweetAlertIcon.Success);
+        }
+    }
+
+    private async Task EliminarPublicacionAsync(Publicacion pub)
+    {
+        var confirm = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "¿Eliminar publicación?",
+            Text = $"Se eliminará '{pub.Titulo}' permanentemente.",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Sí, eliminar",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (string.IsNullOrEmpty(confirm.Value)) return;
+
+        var resp = await repository.DeleteAsync($"api/publicaciones/{pub.Id}");
+        if (resp.Error)
+        {
+            var msg = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", msg, SweetAlertIcon.Error);
+        }
+        else
+        {
+            misPublicaciones.Remove(pub);
+            await swal.FireAsync("Eliminada", "La publicación ha sido eliminada.", SweetAlertIcon.Success);
+        }
+    }
+
+    private string ObtenerClaseEstado(string? estado) => estado switch
+    {
+        "Aceptada" => "bg-success",
+        "Rechazada" => "bg-danger",
+        _ => "bg-warning text-dark"
+    };
+}

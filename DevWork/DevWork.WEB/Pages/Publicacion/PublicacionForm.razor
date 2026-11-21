@@ -1,83 +1,96 @@
-﻿@inject SweetAlertService swal
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject SweetAlertService swal
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<div class="p-4 rounded-4 shadow-sm" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08); max-width: 820px;">
-    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger small mb-3" />
+<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger small mb-3" />
 
-        <div class="row g-3">
-            <div class="col-md-8">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Título de la Publicación</label>
-                <InputText class="form-control"
-                           placeholder="Ej. Desarrollo de API REST en ASP.NET Core"
-                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                           @bind-Value="Publicacion.Titulo" />
-                <ValidationMessage For="@(() => Publicacion.Titulo)" class="text-danger small mt-1" />
-            </div>
+    <div class="row g-3">
+        <AuthorizeView Roles="Admin,Administrador" Context="adminContext">
+            <Authorized>
+                <div class="col-md-8">
+                    <label class="form-label small fw-semibold" style="color: #CBD5E1;">Título de la Publicación</label>
+                    <InputText class="form-control"
+                               placeholder="Ej. Desarrollo de API REST en ASP.NET Core"
+                               style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                               @bind-Value="Publicacion.Titulo" />
+                    <ValidationMessage For="@(() => Publicacion.Titulo)" class="text-danger small mt-1" />
+                </div>
 
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Id de Usuario</label>
-                <InputNumber class="form-control"
-                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                             @bind-Value="Publicacion.UserId" />
-                <ValidationMessage For="@(() => Publicacion.UserId)" class="text-danger small mt-1" />
-            </div>
-
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Área de Sistemas</label>
-                <InputText class="form-control"
-                           placeholder="Ej. Backend, Frontend, Móvil, BD"
-                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                           @bind-Value="Publicacion.AreaSistemas" />
-                <ValidationMessage For="@(() => Publicacion.AreaSistemas)" class="text-danger small mt-1" />
-            </div>
-
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Tipo de Oferta</label>
-                <InputText class="form-control"
-                           placeholder="Ej. Freelance, Tiempo Completo"
-                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                           @bind-Value="Publicacion.TipoOferta" />
-                <ValidationMessage For="@(() => Publicacion.TipoOferta)" class="text-danger small mt-1" />
-            </div>
-
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Presupuesto o Salario</label>
-                <div class="input-group">
-                    <span class="input-group-text"
-                          style="background-color: #1E293B; border-color: rgba(255,255,255,0.12); color: #94A3B8;">$</span>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold" style="color: #CBD5E1;">Id de Usuario</label>
                     <InputNumber class="form-control"
                                  style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                                 @bind-Value="Publicacion.PresupuestoOSalario" />
+                                 @bind-Value="Publicacion.UserId" />
+                    <ValidationMessage For="@(() => Publicacion.UserId)" class="text-danger small mt-1" />
                 </div>
-                <ValidationMessage For="@(() => Publicacion.PresupuestoOSalario)" class="text-danger small mt-1" />
-            </div>
-
-            <div class="col-12">
-                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Descripción</label>
-                <InputTextArea class="form-control"
-                               rows="4"
-                               placeholder="Detalla los objetivos del proyecto, entregables esperados, stack tecnológico y plazos..."
+            </Authorized>
+            <NotAuthorized>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold" style="color: #CBD5E1;">Título de la Publicación</label>
+                    <InputText class="form-control"
+                               placeholder="Ej. Desarrollo de API REST en ASP.NET Core"
                                style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
-                               @bind-Value="Publicacion.Descripcion" />
-                <ValidationMessage For="@(() => Publicacion.Descripcion)" class="text-danger small mt-1" />
+                               @bind-Value="Publicacion.Titulo" />
+                    <ValidationMessage For="@(() => Publicacion.Titulo)" class="text-danger small mt-1" />
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold" style="color: #CBD5E1;">Área de Sistemas</label>
+            <InputText class="form-control"
+                       placeholder="Ej. Backend, Frontend, Móvil, BD"
+                       style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                       @bind-Value="Publicacion.AreaSistemas" />
+            <ValidationMessage For="@(() => Publicacion.AreaSistemas)" class="text-danger small mt-1" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold" style="color: #CBD5E1;">Tipo de Oferta</label>
+            <InputText class="form-control"
+                       placeholder="Ej. Freelance, Tiempo Completo"
+                       style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                       @bind-Value="Publicacion.TipoOferta" />
+            <ValidationMessage For="@(() => Publicacion.TipoOferta)" class="text-danger small mt-1" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold" style="color: #CBD5E1;">Presupuesto o Salario</label>
+            <div class="input-group">
+                <span class="input-group-text"
+                      style="background-color: #1E293B; border-color: rgba(255,255,255,0.12); color: #94A3B8;">$</span>
+                <InputNumber class="form-control"
+                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                             @bind-Value="Publicacion.PresupuestoOSalario" />
             </div>
+            <ValidationMessage For="@(() => Publicacion.PresupuestoOSalario)" class="text-danger small mt-1" />
         </div>
 
-        <hr class="my-4" style="border-color: rgba(255,255,255,0.08);" />
-
-        <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-primary px-4" type="submit">
-                Guardar
-            </button>
-            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
-                Regresar
-            </button>
+        <div class="col-12">
+            <label class="form-label small fw-semibold" style="color: #CBD5E1;">Descripción</label>
+            <InputTextArea class="form-control"
+                           rows="4"
+                           placeholder="Detalla los objetivos del proyecto, entregables esperados, stack tecnológico y plazos..."
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="Publicacion.Descripcion" />
+            <ValidationMessage For="@(() => Publicacion.Descripcion)" class="text-danger small mt-1" />
         </div>
-    </EditForm>
-</div>
+    </div>
+
+    <hr class="my-4" style="border-color: rgba(255,255,255,0.08);" />
+
+    <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary px-4" type="submit">
+            Guardar
+        </button>
+        <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+            Regresar
+        </button>
+    </div>
+</EditForm>
 
 @code {
     private EditContext editContext = null!;

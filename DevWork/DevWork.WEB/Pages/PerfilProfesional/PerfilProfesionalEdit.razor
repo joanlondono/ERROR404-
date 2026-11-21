@@ -75,12 +75,27 @@
 
         var perfilCargado = response.Response!;
 
-        // Bloquear acceso si intentó entrar por URL a un perfil ajeno
-        if (!esAdmin && perfilCargado.UserId != usuarioActualId)
+        if (!esAdmin)
         {
-            await swal.FireAsync("Acceso denegado", "No tienes permiso para editar este perfil profesional.", SweetAlertIcon.Warning);
-            navigationManager.NavigateTo("/Perfiles");
-            return;
+            bool esSuPerfil = (usuarioActualId > 0 && perfilCargado.UserId == usuarioActualId);
+
+            // Respaldo: si el JWT usa GUID (string) o el endpoint individual no devuelve UserId,
+            // verificamos contra los perfiles que el backend devuelve al usuario actual
+            if (!esSuPerfil)
+            {
+                var respLista = await repository.GetAsync<List<PerfilProfesionalModel>>("api/perfilesprofesionales");
+                if (!respLista.Error && respLista.Response != null)
+                {
+                    esSuPerfil = respLista.Response.Any(p => p.Id == Id && (usuarioActualId == 0 || p.UserId == usuarioActualId || p.UserId == 0));
+                }
+            }
+
+            if (!esSuPerfil)
+            {
+                await swal.FireAsync("Acceso denegado", "No tienes permiso para editar este perfil profesional.", SweetAlertIcon.Warning);
+                navigationManager.NavigateTo("/Perfiles");
+                return;
+            }
         }
 
         perfilProfesional = perfilCargado;

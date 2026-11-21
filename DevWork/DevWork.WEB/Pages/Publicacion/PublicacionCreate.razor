@@ -1,42 +1,79 @@
 ﻿@page "/publicaciones/create"
 @attribute [Authorize]
 @using DevWork.Shared.Models
-
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<h3>Crear publicación</h3>
+<PageTitle>Crear Publicación - DevWork</PageTitle>
 
-<PublicacionForm @ref="publicacionForm" Publicacion="publicacion" OnSubmit="Create" ReturnAction="Return" />
+<div class="mb-3">
+    <a href="/publicaciones" class="btn btn-sm btn-outline-light">
+        ← Volver a Publicaciones
+    </a>
+</div>
+
+<div class="mx-auto" style="max-width: 820px;">
+    <div class="p-4 p-md-5 rounded-4" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="mb-4 pb-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+            <h3 class="fw-bold text-white mb-1">Crear Publicación</h3>
+            <small style="color: #94A3B8;">Publica una nueva oferta laboral o proyecto tecnológico en DevWork</small>
+        </div>
+
+        <PublicacionForm @ref="publicacionForm"
+                         Publicacion="publicacion"
+                         OnSubmit="Create"
+                         ReturnAction="Return" />
+    </div>
+</div>
 
 @code {
     private PublicacionModel publicacion = new();
     private PublicacionForm publicacionForm = null!;
+    private int usuarioActualId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("UserId")?.Value
+                   ?? user.FindFirst("id")?.Value
+                   ?? user.FindFirst("sub")?.Value;
+
+        if (int.TryParse(idClaim, out usuarioActualId))
+        {
+            publicacion.UserId = usuarioActualId;
+        }
+    }
 
     private async Task Create()
     {
-        // Se corrige la ruta relativa en plural "api/publicaciones"
+        // Aseguramos que lleve el ID del usuario autenticado
+        if (usuarioActualId > 0)
+        {
+            publicacion.UserId = usuarioActualId;
+        }
+
         var responseHttp = await repository.PostAsync("api/publicaciones", publicacion);
-        
+
         if (responseHttp.Error)
         {
-            // Se corrige el nombre del método a GetErrorMessageAsync
             var message = await responseHttp.GetErrorMessageAsync();
             await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
             return;
         }
 
-        // Se corrige el nombre de la variable a publicacionForm
         publicacionForm.FormPostedSuccessfully = true;
-        navigationManager.NavigateTo("publicaciones");
+        navigationManager.NavigateTo("/publicaciones");
     }
 
     private void Return()
     {
-        navigationManager.NavigateTo("publicaciones");
+        navigationManager.NavigateTo("/publicaciones");
     }
 }
-
-
-
