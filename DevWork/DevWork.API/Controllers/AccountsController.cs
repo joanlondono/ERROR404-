@@ -1,6 +1,8 @@
 ﻿using DevWork.API.Helpers;
 using DevWork.Shared.DTOs;
 using DevWork.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -171,6 +173,68 @@ namespace DevWork.API.Controllers
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 Expiration = expiration
             };
+        }
+
+        [HttpPut("UpdatePhoto")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult> UpdatePhoto([FromBody] UpdatePhotoDTO model)
+        {
+            Console.WriteLine(">>> [UpdatePhoto] Petición recibida");
+            try
+            {
+                if (model == null || string.IsNullOrWhiteSpace(model.Photo))
+                {
+                    return BadRequest("No se recibió ninguna imagen.");
+                }
+
+                var email = User.Identity?.Name
+                    ?? User.FindFirst(ClaimTypes.Email)?.Value
+                    ?? User.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value;
+
+                Console.WriteLine($">>> [UpdatePhoto] Email detectado: {email}");
+
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Unauthorized("No se pudo identificar al usuario.");
+                }
+
+                var user = await _userHelper.GetUserAsync(email);
+                if (user == null)
+                {
+                    return NotFound("Usuario no encontrado.");
+                }
+
+                var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "users");
+                Directory.CreateDirectory(folderPath);
+
+                if (!string.IsNullOrEmpty(user.Photo))
+                {
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.Photo.Replace("/", Path.DirectorySeparatorChar.ToString()));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+
+                var base64Data = model.Photo.Contains(",")
+                    ? model.Photo.Split(',')[1]
+                    : model.Photo;
+
+                var photoBytes = Convert.FromBase64String(base64Data);
+                var fileName = $"{Guid.NewGuid()}.jpg";
+                await System.IO.File.WriteAllBytesAsync(Path.Combine(folderPath, fileName), photoBytes);
+
+                user.Photo = $"images/users/{fileName}";
+                await _userHelper.UpdateUserAsync(user);
+
+                Console.WriteLine(">>> [UpdatePhoto] Foto guardada y usuario actualizado");
+                return Ok(await BuildTokenAsync(user));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> [UpdatePhoto] ERROR: {ex}");
+                return BadRequest($"Error en UpdatePhoto: {ex.Message}");
+            }
         }
     }
 }

@@ -5,18 +5,50 @@
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <Authorizing>
-                    <p>Autorizando...</p>
+                    <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p class="text-secondary small">Verificando permisos...</p>
+                    </div>
                 </Authorizing>
                 <NotAuthorized>
-                    <p>No estás autorizado para ver este contenido...</p>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <div class="text-center py-5 my-4">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 64px; height: 64px; background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35);">
+                                <i class="bi bi-lock-fill text-primary fs-3"></i>
+                            </div>
+                            <h4 class="text-white fw-bold">Inicia sesión para continuar</h4>
+                            <p style="color: #94A3B8;">Debes autenticarte para acceder a esta sección de DevWork.</p>
+                            <a href="/login" class="btn btn-primary px-4 mt-2">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 my-4">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 64px; height: 64px; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35);">
+                                <i class="bi bi-shield-exclamation text-danger fs-3"></i>
+                            </div>
+                            <h4 class="text-white fw-bold">Acceso denegado</h4>
+                            <p style="color: #94A3B8;">No tienes los permisos necesarios para ver este contenido.</p>
+                            <a href="/" class="btn btn-outline-light px-4 mt-2">Volver al inicio</a>
+                        </div>
+                    }
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-            <PageTitle>No encontrado</PageTitle>
+            <PageTitle>No encontrado - DevWork</PageTitle>
             <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Lo sentimos no hay nada en esta ruta.</p>
+                <div class="text-center py-5 my-4">
+                    <h2 class="text-white fw-bold">404</h2>
+                    <p style="color: #94A3B8;">Lo sentimos, no hay nada en esta ruta.</p>
+                    <a href="/" class="btn btn-primary px-4 mt-2">Volver al inicio</a>
+                </div>
             </LayoutView>
         </NotFound>
     </Router>

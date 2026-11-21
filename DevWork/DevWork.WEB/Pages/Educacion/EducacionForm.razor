@@ -2,42 +2,78 @@
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="profile-card p-4">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Id de perfil profesional:</label>
-        <InputNumber class="form-control" @bind-Value="Educacion.PerfilProfesionalId" />
-        <ValidationMessage For="@(() => Educacion.PerfilProfesionalId)" />
-    </div>
-    <div class="mb-3">
-        <label>Título:</label>
-        <InputText class="form-control" @bind-Value="Educacion.Titulo" />
-        <ValidationMessage For="@(() => Educacion.Titulo)" />
-    </div>
-    <div class="mb-3">
-        <label>Institución:</label>
-        <InputText class="form-control" @bind-Value="Educacion.Institucion" />
-        <ValidationMessage For="@(() => Educacion.Institucion)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de inicio:</label>
-        <InputDate class="form-control" @bind-Value="Educacion.FechaInicio" />
-        <ValidationMessage For="@(() => Educacion.FechaInicio)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de finalización:</label>
-        <InputDate class="form-control" @bind-Value="Educacion.FechaFin" />
-        <ValidationMessage For="@(() => Educacion.FechaFin)" />
-    </div>
+        <div class="row g-3">
+            <!-- Título -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Título o programa académico</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Tecnología en Desarrollo de Software"
+                           @bind-Value="Educacion.Titulo" />
+                <ValidationMessage For="@(() => Educacion.Titulo)" />
+            </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+            <!-- Institución -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Institución educativa</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Instituto Tecnológico Metropolitano (ITM)"
+                           @bind-Value="Educacion.Institucion" />
+                <ValidationMessage For="@(() => Educacion.Institucion)" />
+            </div>
+
+            <!-- Fecha de inicio -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Fecha de inicio</label>
+                <InputDate class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           @bind-Value="Educacion.FechaInicio" />
+                <ValidationMessage For="@(() => Educacion.FechaInicio)" />
+            </div>
+
+            <!-- Fecha de finalización -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Fecha de finalización</label>
+                <InputDate class="form-control"
+                           disabled="@enCurso"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           @bind-Value="Educacion.FechaFin" />
+                <ValidationMessage For="@(() => Educacion.FechaFin)" />
+
+                <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="chkEstudioActual"
+                           checked="@enCurso"
+                           @onchange="OnEnCursoChanged" />
+                    <label class="form-check-label small" for="chkEstudioActual" style="color: #CBD5E1;">
+                        Actualmente estudio aquí (En curso)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm" type="submit">
+                <i class="bi bi-check-lg me-1"></i> Guardar Educación
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;
+    private bool enCurso = false;
 
     [EditorRequired]
     [Parameter]
@@ -55,7 +91,31 @@
 
     protected override void OnInitialized()
     {
+        if (Educacion.FechaInicio.Year <= 1)
+        {
+            Educacion.FechaInicio = DateTime.Today;
+        }
+
+        if (Educacion.Id > 0 && (!Educacion.FechaFin.HasValue || Educacion.FechaFin.Value.Year <= 1))
+        {
+            enCurso = true;
+            Educacion.FechaFin = null;
+        }
+
         editContext = new EditContext(Educacion);
+    }
+
+    private void OnEnCursoChanged(ChangeEventArgs e)
+    {
+        enCurso = e.Value is bool b && b;
+        if (enCurso)
+        {
+            Educacion.FechaFin = null;
+        }
+        else if (!Educacion.FechaFin.HasValue)
+        {
+            Educacion.FechaFin = DateTime.Today;
+        }
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

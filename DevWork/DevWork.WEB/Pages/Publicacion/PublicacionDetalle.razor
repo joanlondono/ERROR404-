@@ -1,0 +1,502 @@
+﻿@page "/Publicaciones/detalle/{Id:int}"
+@attribute [Authorize]
+@using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IRepository repository
+@inject SweetAlertService swal
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Detalle de Publicación - DevWork</PageTitle>
+
+<div class="mb-3">
+    <a href="/publicaciones" class="btn btn-sm btn-outline-light">
+        ← Volver a Publicaciones
+    </a>
+</div>
+
+@if (cargando)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else if (publicacion == null)
+{
+    <div class="detail-card text-center p-5">
+        <h4 class="text-white">Publicación no encontrada</h4>
+    </div>
+}
+else
+{
+    <!-- TARJETA DE LA PUBLICACIÓN -->
+    <div class="detail-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div class="d-flex flex-wrap gap-2" style="min-width: 0;">
+                @if (!string.IsNullOrWhiteSpace(publicacion.AreaSistemas))
+                {
+                    <span class="detail-badge-area">@publicacion.AreaSistemas</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(publicacion.TipoOferta))
+                {
+                    <span class="detail-badge-oferta">@publicacion.TipoOferta</span>
+                }
+            </div>
+
+            <AuthorizeView>
+                <Authorized>
+                    @if (miAplicacionExistente != null)
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i> Postulado (@miAplicacionExistente.Estado)
+                            </span>
+                            <a href="/aplicaciones" class="btn btn-sm btn-outline-light">
+                                Ver mis aplicaciones
+                            </a>
+                        </div>
+                    }
+                    else if (!esDueñoPublicacion)
+                    {
+                        <button class="btn btn-success btn-sm px-4 shadow-sm"
+                                @onclick="() => mostrarFormularioAplicar = !mostrarFormularioAplicar">
+                            <i class="bi bi-send me-1"></i>
+                            @(mostrarFormularioAplicar ? "Cancelar postulación" : "Postularme a esta oferta")
+                        </button>
+                    }
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <h2 class="fw-bold mb-2 text-white" style="overflow-wrap: anywhere; word-break: break-word;">
+            @publicacion.Titulo
+        </h2>
+
+        @if (publicacion.PresupuestoOSalario > 0)
+        {
+            <div class="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-2 small fw-semibold mt-1"
+                 style="background-color: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.25);">
+                <span>Presupuesto / Salario: @publicacion.PresupuestoOSalario.ToString("C0")</span>
+            </div>
+        }
+
+        <hr class="my-3" style="border-color: rgba(255,255,255,0.1);" />
+
+        <p style="color: #E2E8F0; font-size: 1rem; line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;" class="mb-0">
+            @publicacion.Descripcion
+        </p>
+
+        <!-- FORMULARIO DESPLEGABLE DE POSTULACIÓN -->
+        @if (mostrarFormularioAplicar && miAplicacionExistente == null)
+        {
+            <div class="mt-4 p-3 rounded-3" style="background-color: #0F172A; border: 1px solid rgba(99, 102, 241, 0.35);">
+                <h6 class="fw-bold text-white mb-2">
+                    <i class="bi bi-briefcase me-1 text-primary"></i> Enviar postulación a esta oferta
+                </h6>
+                <label class="form-label small mb-2" style="color: #CBD5E1;">
+                    Cuéntale al reclutador por qué eres ideal para este proyecto o vacante:
+                </label>
+                <textarea class="form-control mb-2"
+                          rows="3"
+                          maxlength="500"
+                          style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                          placeholder="Escribe tu propuesta o mensaje de presentación..."
+                          @bind="propuestaMensaje"
+                          @bind:event="oninput"></textarea>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small style="color: #94A3B8;">@(propuestaMensaje?.Length ?? 0) / 500 caracteres</small>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-light" @onclick="() => mostrarFormularioAplicar = false">
+                            Cancelar
+                        </button>
+                        <button class="btn btn-success btn-sm px-4"
+                                disabled="@(string.IsNullOrWhiteSpace(propuestaMensaje) || enviandoAplicacion)"
+                                @onclick="EnviarAplicacionAsync">
+                            @(enviandoAplicacion ? "Enviando..." : "Confirmar Postulación")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- SECCIÓN DE COMENTARIOS / PREGUNTAS -->
+    <div class="detail-card p-4">
+        <h5 class="fw-bold mb-3 text-white">
+            Comentarios y Preguntas (@comentarios.Count)
+        </h5>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="mb-4 p-3 rounded-3" style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.12);">
+                    <label class="form-label small fw-semibold mb-2" style="color: #CBD5E1;">
+                        Escribe tu pregunta o comentario sobre esta publicación
+                    </label>
+                    <textarea class="form-control mb-2"
+                              rows="3"
+                              maxlength="200"
+                              style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                              placeholder="Escribe aquí tu consulta o comentario (máx. 200 caracteres)..."
+                              @bind="nuevoComentarioTexto"
+                              @bind:event="oninput"></textarea>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small style="color: #94A3B8;">@(nuevoComentarioTexto?.Length ?? 0) / 200 caracteres</small>
+                        <button class="btn btn-primary btn-sm px-4"
+                                disabled="@(string.IsNullOrWhiteSpace(nuevoComentarioTexto) || enviando)"
+                                @onclick="CrearComentarioAsync">
+                            @(enviando ? "Publicando..." : "Publicar Comentario")
+                        </button>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        @if (!comentarios.Any())
+        {
+            <p class="text-center py-4 mb-0" style="color: #94A3B8;">
+                Aún no hay comentarios en esta publicación. ¡Sé el primero en preguntar!
+            </p>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var item in comentarios)
+                {
+                    var esMio = (usuarioActualId > 0 && item.UserId == usuarioActualId) ||
+                                (!string.IsNullOrEmpty(usuarioActualEmail) &&
+                                 string.Equals(item.AutorEmail, usuarioActualEmail, StringComparison.OrdinalIgnoreCase));
+
+                    <div class="p-3 rounded-3" style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                     style="width: 32px; height: 32px; background-color: #312E81; font-size: 0.85rem;">
+                                    @(string.IsNullOrEmpty(item.AutorNombre) ? "U" : item.AutorNombre.Substring(0, 1).ToUpper())
+                                </div>
+                                <span class="fw-semibold small" style="color: #F8FAFC;">@item.AutorNombre</span>
+                                @if (esMio)
+                                {
+                                    <span class="badge bg-primary" style="font-size: 0.65rem;">Tú</span>
+                                }
+                            </div>
+
+                            @if (esMio || esAdmin)
+                            {
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-warning py-0 px-2" @onclick="() => IniciarEdicion(item)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-danger py-0 px-2" @onclick="() => BorrarComentarioAsync(item)">
+                                        Borrar
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        @if (editandoId == item.Id)
+                        {
+                            <div class="mt-2">
+                                <textarea class="form-control mb-2"
+                                          rows="2"
+                                          maxlength="200"
+                                          style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                                          @bind="textoEditado"></textarea>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn btn-sm btn-outline-light" @onclick="CancelarEdicion">Cancelar</button>
+                                    <button class="btn btn-sm btn-success" @onclick="() => GuardarEdicionAsync(item)">Guardar</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="mb-0 ps-1" style="color: #F1F5F9; font-size: 0.95rem; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; word-break: break-word;">
+                                @item.TextoPregunta
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .detail-card {
+        background-color: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .detail-badge-area,
+    .detail-badge-oferta {
+        display: inline-block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+    }
+
+    .detail-badge-area {
+        background-color: rgba(255, 255, 255, 0.06);
+        color: #E2E8F0;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .detail-badge-oferta {
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #A5B4FC;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+</style>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Publicacion? publicacion;
+    private List<ComentarioDTO> comentarios = new();
+    private string nuevoComentarioTexto = string.Empty;
+    private bool cargando = true;
+    private bool enviando = false;
+
+    // Variables de postulación
+    private Aplicacion? miAplicacionExistente;
+    private bool mostrarFormularioAplicar = false;
+    private string propuestaMensaje = string.Empty;
+    private bool enviandoAplicacion = false;
+
+    private int usuarioActualId = 0;
+    private string usuarioActualEmail = string.Empty;
+    private bool esAdmin = false;
+    private bool esDueñoPublicacion => publicacion != null && usuarioActualId > 0 && publicacion.UserId == usuarioActualId;
+
+    private int? editandoId = null;
+    private string textoEditado = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            esAdmin = user.IsInRole("Admin") || user.IsInRole("Administrador");
+            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? user.FindFirst("UserId")?.Value
+                       ?? user.FindFirst("id")?.Value
+                       ?? user.FindFirst("sub")?.Value;
+            int.TryParse(idClaim, out usuarioActualId);
+
+            usuarioActualEmail = user.Identity?.Name
+                ?? user.FindFirst(ClaimTypes.Email)?.Value
+                ?? user.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value
+                ?? string.Empty;
+        }
+
+        await CargarTodoAsync();
+    }
+
+    private async Task CargarTodoAsync()
+    {
+        cargando = true;
+        try
+        {
+            var respPub = await repository.GetAsync<Publicacion>($"api/publicaciones/{Id}");
+            if (!respPub.Error)
+            {
+                publicacion = respPub.Response;
+            }
+
+            await CargarComentariosAsync();
+            await VerificarAplicacionExistenteAsync();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task VerificarAplicacionExistenteAsync()
+    {
+        if (string.IsNullOrEmpty(usuarioActualEmail) && usuarioActualId == 0) return;
+
+        var respApps = await repository.GetAsync<List<Aplicacion>>("api/aplicaciones");
+        if (!respApps.Error && respApps.Response != null)
+        {
+            miAplicacionExistente = respApps.Response.FirstOrDefault(a => a.PublicacionId == Id);
+        }
+    }
+
+    private async Task EnviarAplicacionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(propuestaMensaje)) return;
+
+        enviandoAplicacion = true;
+        try
+        {
+            // Buscar el perfil profesional real del usuario actual
+            int perfilId = 0;
+            var respPerfiles = await repository.GetAsync<List<PerfilProfesional>>("api/PerfilesProfesionales");
+            if (!respPerfiles.Error && respPerfiles.Response != null)
+            {
+                var miPerfil = respPerfiles.Response.FirstOrDefault(p => p.UserId == usuarioActualId);
+                if (miPerfil != null)
+                {
+                    perfilId = miPerfil.Id;
+                }
+            }
+
+            if (perfilId == 0)
+            {
+                await swal.FireAsync("Perfil requerido", "Debes crear tu Perfil Profesional antes de postularte a una oferta.", SweetAlertIcon.Info);
+                navigationManager.NavigateTo("/Perfiles");
+                return;
+            }
+
+            var nuevaAplicacion = new Aplicacion
+            {
+                PublicacionId = Id,
+                PerfilProfesionalId = perfilId,
+                PropuestaMensaje = propuestaMensaje.Trim(),
+                Estado = "Pendiente",
+                FechaPostulacion = DateTime.Now
+            };
+
+            var resp = await repository.PostAsync("api/aplicaciones", nuevaAplicacion);
+            if (resp.Error)
+            {
+                var msg = await resp.GetErrorMessageAsync();
+                await swal.FireAsync("No se pudo completar la postulación", msg, SweetAlertIcon.Warning);
+            }
+            else
+            {
+                mostrarFormularioAplicar = false;
+                propuestaMensaje = string.Empty;
+                await swal.FireAsync("¡Postulación enviada!", "Tu solicitud quedó registrada como Pendiente.", SweetAlertIcon.Success);
+                await VerificarAplicacionExistenteAsync();
+            }
+        }
+        finally
+        {
+            enviandoAplicacion = false;
+        }
+    }
+
+    private async Task CargarComentariosAsync()
+    {
+        var respCom = await repository.GetAsync<List<ComentarioDTO>>($"api/preguntas/por-publicacion/{Id}");
+        if (!respCom.Error && respCom.Response != null)
+        {
+            comentarios = respCom.Response;
+        }
+    }
+
+    private async Task CrearComentarioAsync()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoComentarioTexto)) return;
+
+        enviando = true;
+        try
+        {
+            var nuevaPregunta = new Pregunta
+            {
+                PublicacionId = Id,
+                TextoPregunta = nuevoComentarioTexto.Trim()
+            };
+
+            var resp = await repository.PostAsync("api/preguntas", nuevaPregunta);
+            if (resp.Error)
+            {
+                var msg = await resp.GetErrorMessageAsync();
+                await swal.FireAsync("Error", msg, SweetAlertIcon.Error);
+            }
+            else
+            {
+                nuevoComentarioTexto = string.Empty;
+                await CargarComentariosAsync();
+            }
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private void IniciarEdicion(ComentarioDTO item)
+    {
+        editandoId = item.Id;
+        textoEditado = item.TextoPregunta;
+    }
+
+    private void CancelarEdicion()
+    {
+        editandoId = null;
+        textoEditado = string.Empty;
+    }
+
+    private async Task GuardarEdicionAsync(ComentarioDTO item)
+    {
+        if (string.IsNullOrWhiteSpace(textoEditado)) return;
+
+        var actualizada = new Pregunta
+        {
+            Id = item.Id,
+            PublicacionId = item.PublicacionId,
+            TextoPregunta = textoEditado.Trim(),
+            UserId = item.UserId
+        };
+
+        var resp = await repository.PutAsync("api/preguntas", actualizada);
+        if (resp.Error)
+        {
+            var msg = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", msg, SweetAlertIcon.Error);
+        }
+        else
+        {
+            editandoId = null;
+            await CargarComentariosAsync();
+        }
+    }
+
+    private async Task BorrarComentarioAsync(ComentarioDTO item)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = "¿Está seguro que quieres borrar este comentario?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value)) return;
+
+        var resp = await repository.DeleteAsync($"api/preguntas/{item.Id}");
+        if (resp.Error)
+        {
+            var msg = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", msg, SweetAlertIcon.Error);
+        }
+        else
+        {
+            await CargarComentariosAsync();
+        }
+    }
+
+    private class ComentarioDTO
+    {
+        public int Id { get; set; }
+        public int PublicacionId { get; set; }
+        public string TextoPregunta { get; set; } = string.Empty;
+        public int UserId { get; set; }
+        public string AutorNombre { get; set; } = "Usuario";
+        public string AutorEmail { get; set; } = string.Empty;
+    }
+}

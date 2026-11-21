@@ -2,59 +2,113 @@
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="p-4 rounded-4 shadow-sm" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08); max-width: 820px;">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger small mb-3" />
 
-    <div class="mb-3">
-        <label>Id de usuario:</label>
-        <InputNumber class="form-control" @bind-Value="PerfilProfesional.UserId" />
-        <ValidationMessage For="@(() => PerfilProfesional.UserId)" />
-    </div>
-    <div class="mb-3">
-        <label>Nombre completo:</label>
-        <InputText class="form-control" @bind-Value="PerfilProfesional.NombreCompleto" />
-        <ValidationMessage For="@(() => PerfilProfesional.NombreCompleto)" />
-    </div>
-    <div class="mb-3">
-        <label>Título profesional:</label>
-        <InputText class="form-control" @bind-Value="PerfilProfesional.TituloProfesional" />
-        <ValidationMessage For="@(() => PerfilProfesional.TituloProfesional)" />
-    </div>
-    <div class="mb-3">
-        <label>Biografía:</label>
-        <InputTextArea class="form-control" @bind-Value="PerfilProfesional.Biografia" />
-        <ValidationMessage For="@(() => PerfilProfesional.Biografia)" />
-    </div>
-    <div class="mb-3">
-        <label>Habilidades técnicas:</label>
-        <InputTextArea class="form-control" @bind-Value="PerfilProfesional.HabilidadesTecnicas" />
-        <ValidationMessage For="@(() => PerfilProfesional.HabilidadesTecnicas)" />
-    </div>
-    <div class="mb-3">
-        <label>Área de especialidad:</label>
-        <InputText class="form-control" @bind-Value="PerfilProfesional.AreaEspecialidad" />
-        <ValidationMessage For="@(() => PerfilProfesional.AreaEspecialidad)" />
-    </div>
-    <div class="mb-3">
-        <label>Tarifa por hora:</label>
-        <InputNumber class="form-control" @bind-Value="PerfilProfesional.TarifaHora" />
-        <ValidationMessage For="@(() => PerfilProfesional.TarifaHora)" />
-    </div>
-    <div class="mb-3">
-        <label>Enlace de GitHub:</label>
-        <InputText class="form-control" @bind-Value="PerfilProfesional.EnlaceGitHub" />
-        <ValidationMessage For="@(() => PerfilProfesional.EnlaceGitHub)" />
-    </div>
-    <div class="mb-3">
-        <label>Enlace de LinkedIn:</label>
-        <InputText class="form-control" @bind-Value="PerfilProfesional.EnlaceLinkedIn" />
-        <ValidationMessage For="@(() => PerfilProfesional.EnlaceLinkedIn)" />
-    </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Id de Usuario</label>
+                <InputNumber class="form-control"
+                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                             @bind-Value="PerfilProfesional.UserId" />
+                <ValidationMessage For="@(() => PerfilProfesional.UserId)" class="text-danger small mt-1" />
+            </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+            <div class="col-md-8">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Nombre Completo</label>
+                <InputText class="form-control"
+                           placeholder="Ej. Juan David Mosquera"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="PerfilProfesional.NombreCompleto" />
+                <ValidationMessage For="@(() => PerfilProfesional.NombreCompleto)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Título Profesional</label>
+                <InputText class="form-control"
+                           placeholder="Ej. Desarrollador Full Stack .NET"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="PerfilProfesional.TituloProfesional" />
+                <ValidationMessage For="@(() => PerfilProfesional.TituloProfesional)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Área de Especialidad</label>
+                <InputText class="form-control"
+                           placeholder="Ej. Backend, Web APIs, Cloud"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="PerfilProfesional.AreaEspecialidad" />
+                <ValidationMessage For="@(() => PerfilProfesional.AreaEspecialidad)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Biografía</label>
+                <InputTextArea class="form-control"
+                               rows="3"
+                               placeholder="Resume tu experiencia, enfoque técnico y tipo de proyectos en los que te especializas..."
+                               style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                               @bind-Value="PerfilProfesional.Biografia" />
+                <ValidationMessage For="@(() => PerfilProfesional.Biografia)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Habilidades Técnicas</label>
+                <InputTextArea class="form-control"
+                               rows="2"
+                               placeholder="Separadas por coma: C#, ASP.NET Core, Blazor, SQL Server, Git..."
+                               style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                               @bind-Value="PerfilProfesional.HabilidadesTecnicas" />
+                <small class="d-block mt-1" style="color: #94A3B8; font-size: 0.78rem;">
+                    Separa cada tecnología con una coma para mostrarlas como etiquetas en tu perfil.
+                </small>
+                <ValidationMessage For="@(() => PerfilProfesional.HabilidadesTecnicas)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Tarifa por Hora (USD)</label>
+                <div class="input-group">
+                    <span class="input-group-text"
+                          style="background-color: #1E293B; border-color: rgba(255,255,255,0.12); color: #94A3B8;">$</span>
+                    <InputNumber class="form-control"
+                                 style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                                 @bind-Value="PerfilProfesional.TarifaHora" />
+                </div>
+                <ValidationMessage For="@(() => PerfilProfesional.TarifaHora)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Enlace de GitHub</label>
+                <InputText class="form-control"
+                           placeholder="https://github.com/usuario"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="PerfilProfesional.EnlaceGitHub" />
+                <ValidationMessage For="@(() => PerfilProfesional.EnlaceGitHub)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Enlace de LinkedIn</label>
+                <InputText class="form-control"
+                           placeholder="https://linkedin.com/in/usuario"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="PerfilProfesional.EnlaceLinkedIn" />
+                <ValidationMessage For="@(() => PerfilProfesional.EnlaceLinkedIn)" class="text-danger small mt-1" />
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.08);" />
+
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary px-4" type="submit">
+                Guardar
+            </button>
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;

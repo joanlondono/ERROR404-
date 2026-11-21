@@ -1,150 +1,229 @@
 ﻿@page "/publicaciones"
+@using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
-
 @inject IRepository repository
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
+<PageTitle>Publicaciones - DevWork</PageTitle>
 
-<h3>Publicacion</h3>
-<div class="mb-3">
-
- 
-
- 
-
-    <a class="btn btn-primary " href="/Publicaciones/Create">New Publicacion</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Ofertas y Publicaciones</h3>
+        <small style="color: #94A3B8;">Explora proyectos disponibles, postúlate o deja tus consultas</small>
+    </div>
+    <AuthorizeView>
+        <Authorized>
+            <a class="btn btn-primary shadow-sm px-4" href="/Publicaciones/Create">
+                + Nueva Publicación
+            </a>
+        </Authorized>
+    </AuthorizeView>
 </div>
 
- 
+<!-- Buscador rápido -->
+<div class="mb-4 d-flex gap-2">
+    <input type="text"
+           class="form-control pub-search-input"
+           placeholder="Buscar por título, área de sistemas o tipo de oferta..."
+           @bind="filtroTexto"
+           @bind:event="oninput" />
+    @if (!string.IsNullOrWhiteSpace(filtroTexto))
+    {
+        <button class="btn btn-outline-light px-3" @onclick="() => filtroTexto = string.Empty">Limpiar</button>
+    }
+</div>
 
-<GenericList MyList="Publicaciones">
-
-
+<GenericList MyList="PublicacionesFiltradas">
     <Body>
+        <div class="row g-4">
+            @foreach (var publicacion in PublicacionesFiltradas!)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="pub-card h-100 d-flex flex-column justify-content-between p-4">
+                        <div class="pub-card-body">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @if (!string.IsNullOrWhiteSpace(publicacion.AreaSistemas))
+                                {
+                                    <span class="pub-badge-area" title="@publicacion.AreaSistemas">
+                                        @publicacion.AreaSistemas
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(publicacion.TipoOferta))
+                                {
+                                    <span class="pub-badge-oferta" title="@publicacion.TipoOferta">
+                                        @publicacion.TipoOferta
+                                    </span>
+                                }
+                            </div>
 
-        <table class="table table-striped">
+                            <h5 class="fw-bold text-white mb-2 pub-title" title="@publicacion.Titulo">
+                                @publicacion.Titulo
+                            </h5>
 
-            <thead>
+                            <p class="small mb-3 pub-desc">
+                                @publicacion.Descripcion
+                            </p>
 
-                <tr>
+                            @if (publicacion.PresupuestoOSalario > 0)
+                            {
+                                <div class="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-2 small fw-semibold"
+                                     style="background-color: rgba(16, 185, 129, 0.12); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.25);">
+                                    <span>@publicacion.PresupuestoOSalario.ToString("C0")</span>
+                                </div>
+                            }
+                        </div>
 
-                    <th>Id</th>
+                        <div class="pt-3 mt-4 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <div class="d-grid">
+                                <a href="/Publicaciones/detalle/@publicacion.Id" class="btn btn-primary btn-sm fw-semibold">
+                                    <i class="bi bi-chat-dots me-1"></i> Ver detalle y comentar
+                                </a>
+                            </div>
 
-                    <th>Titulo</th>
-                    <th>Descripcion</th>
-                    <th>AreaSistemas</th>
-                    <th>TipoOferta</th>
-                    <th>UserId</th>
-
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var publicacion in Publicaciones!)
-
-                {
-
-                    <tr>
-
-                         
-
-                        <td>
-
-                            @publicacion.Id
-
-                        </td>
-
-                        <td>
-
-                            @publicacion.Titulo
-
-                        </td>
-                        <td>
-
-                            @publicacion.Descripcion
-
-                        </td>
-                        <td>
-
-                            @publicacion.AreaSistemas
-
-                        </td>
-                        <td>
-
-                            @publicacion.TipoOferta
-
-                        </td>
-                        <td>
-
-                            @publicacion.UserId
-
-                        </td>
-
- 
-
-                        
-                        <td>
-
-                            <a href="/Publicaciones/edit/@publicacion.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(publicacion))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
- 
-
+                            @if (esAdmin || (usuarioActualId > 0 && publicacion.UserId == usuarioActualId))
+                            {
+                                <div class="d-flex gap-2 mt-2">
+                                    <a href="/Publicaciones/edit/@publicacion.Id" class="btn btn-sm btn-warning flex-fill">
+                                        Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger flex-fill" @onclick=@(() => DeleteAsync(publicacion))>
+                                        Borrar
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
 
- 
+<style>
+    .pub-search-input {
+        background-color: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #F8FAFC !important;
+        border-radius: 10px;
+        padding: 0.65rem 1rem;
+    }
 
- 
+    .pub-search-input::placeholder {
+        color: #64748B;
+    }
 
- 
+    .pub-search-input:focus {
+        border-color: #6366F1 !important;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.2) !important;
+    }
 
- 
+    .pub-card {
+        background-color: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
 
- 
+    .pub-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(99, 102, 241, 0.45);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .pub-card-body {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .pub-badge-area,
+    .pub-badge-oferta {
+        display: inline-block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+    }
+
+    .pub-badge-area {
+        background-color: rgba(255, 255, 255, 0.06);
+        color: #E2E8F0;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .pub-badge-oferta {
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #A5B4FC;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    .pub-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pub-desc {
+        color: #CBD5E1;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+</style>
 
 @code {
+    public List<Publicacion> Publicaciones { get; set; } = new();
+    private string filtroTexto = string.Empty;
+    private int usuarioActualId = 0;
+    private bool esAdmin = false;
 
-    public List<Publicacion> Publicaciones { get; set; }
+    private List<Publicacion> PublicacionesFiltradas =>
+        string.IsNullOrWhiteSpace(filtroTexto)
+            ? Publicaciones
+            : Publicaciones.Where(p =>
+                (p.Titulo?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.AreaSistemas?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.TipoOferta?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false))
+              .ToList();
 
     protected async override Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            esAdmin = user.IsInRole("Admin") || user.IsInRole("Administrador");
+            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? user.FindFirst("UserId")?.Value
+                       ?? user.FindFirst("id")?.Value
+                       ?? user.FindFirst("sub")?.Value;
+            int.TryParse(idClaim, out usuarioActualId);
+        }
+
         await Load();
     }
 
-        private async Task Load()
+    private async Task Load()
     {
-        // CORREGIDO: Ruta en singular "api/Publicacion" y sin la barra inclinada inicial
         var responseHppt = await repository.GetAsync<List<Publicacion>>("api/Publicaciones");
-        
-        // CONTROL DE ERRORES: Si la API falla, muestra la alerta y previene que el esqueleto se quede infinito
+
         if (responseHppt.Error)
         {
             var mensajeError = await responseHppt.GetErrorMessageAsync();
             await swal.FireAsync("Error", $"No se pudieron cargar las publicaciones: {mensajeError}", SweetAlertIcon.Error);
-            Publicaciones = new List<Publicacion>(); // Inicializa la lista vacía para romper el estado de carga
+            Publicaciones = new List<Publicacion>();
             return;
         }
 
@@ -156,19 +235,16 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar esta publicación?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
-        var confirm = string.IsNullOrEmpty(result.Value);
-
-        if (confirm)
+        if (string.IsNullOrEmpty(result.Value))
         {
             return;
         }
 
-        // CORREGIDO: Ruta de eliminación cambiada a singular para coincidir con el backend
         var responseHTTP = await repository.DeleteAsync($"api/Publicaciones/{Publicacion.Id}");
 
         if (responseHTTP.Error)
@@ -188,6 +264,4 @@
             await Load();
         }
     }
-
-    }
-        
+}

@@ -2,39 +2,63 @@
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="profile-card p-4">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Id de perfil profesional:</label>
-        <InputNumber class="form-control" @bind-Value="Certificacion.PerfilProfesionalId" />
-        <ValidationMessage For="@(() => Certificacion.PerfilProfesionalId)" />
-    </div>
-    <div class="mb-3">
-        <label>Nombre:</label>
-        <InputText class="form-control" @bind-Value="Certificacion.Nombre" />
-        <ValidationMessage For="@(() => Certificacion.Nombre)" />
-    </div>
-    <div class="mb-3">
-        <label>Entidad emisora:</label>
-        <InputText class="form-control" @bind-Value="Certificacion.EnteEmisor" />
-        <ValidationMessage For="@(() => Certificacion.EnteEmisor)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de obtención:</label>
-        <InputDate class="form-control" @bind-Value="Certificacion.FechaObtencion" />
-        <ValidationMessage For="@(() => Certificacion.FechaObtencion)" />
-    </div>
-    <div class="mb-3">
-        <label>URL de la credencial:</label>
-        <InputText class="form-control" @bind-Value="Certificacion.UrlCredencial" />
-        <ValidationMessage For="@(() => Certificacion.UrlCredencial)" />
-    </div>
+        <div class="row g-3">
+            <!-- Nombre -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Nombre de la certificación</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Microsoft Certified: Azure Developer Associate"
+                           @bind-Value="Certificacion.Nombre" />
+                <ValidationMessage For="@(() => Certificacion.Nombre)" />
+            </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+            <!-- Entidad emisora -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Entidad emisora</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Microsoft, AWS, Platzi, Coursera"
+                           @bind-Value="Certificacion.EnteEmisor" />
+                <ValidationMessage For="@(() => Certificacion.EnteEmisor)" />
+            </div>
+
+            <!-- Fecha de obtención -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Fecha de obtención</label>
+                <InputDate class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           @bind-Value="Certificacion.FechaObtencion" />
+                <ValidationMessage For="@(() => Certificacion.FechaObtencion)" />
+            </div>
+
+            <!-- URL de la credencial -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">URL de la credencial verificable</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="https://www.credly.com/badges/..."
+                           @bind-Value="Certificacion.UrlCredencial" />
+                <ValidationMessage For="@(() => Certificacion.UrlCredencial)" />
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm" type="submit">
+                <i class="bi bi-check-lg me-1"></i> Guardar Certificación
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;
@@ -55,6 +79,11 @@
 
     protected override void OnInitialized()
     {
+        if (Certificacion.FechaObtencion.Year <= 1)
+        {
+            Certificacion.FechaObtencion = DateTime.Today;
+        }
+
         editContext = new EditContext(Certificacion);
     }
 

@@ -1,111 +1,85 @@
 ﻿@page "/ExperienciaProfesional"
+@attribute [Authorize(Roles = "Admin,Administrador")]
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
-<h3>Experiencia Profesional</h3>
-<div class="mb-3">
 
- 
+<PageTitle>Experiencia Profesional - DevWork</PageTitle>
 
- 
-
-    <a class="btn btn-primary " href="/ExperienciaProfesional/Create">New Experiencia</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Experiencia Profesional</h3>
+        <small style="color: #94A3B8;">Trayectoria laboral y cargos desempeñados</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="/ExperienciaProfesional/Create">
+        + Nueva Experiencia
+    </a>
 </div>
 
- 
-
 <GenericList MyList="Experienciaprofesional">
-
-
     <Body>
+        <div class="d-flex flex-column gap-3">
+            @foreach (var experiencia in Experienciaprofesional!.OrderByDescending(e => e.FechaInicio))
+            {
+                var inicioTexto = experiencia.FechaInicio.Year > 1
+                    ? experiencia.FechaInicio.ToString("MMM yyyy")
+                    : "Sin fecha de inicio";
 
-        <table class="table table-striped">
+                var esActual = !experiencia.FechaFin.HasValue || experiencia.FechaFin.Value.Year <= 1;
+                var finTexto = esActual
+                    ? "Actualidad"
+                    : experiencia.FechaFin!.Value.ToString("MMM yyyy");
 
-            <thead>
+                <div class="profile-card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                        <!-- Información principal del cargo -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <span class="badge-area">@experiencia.Empresa</span>
 
-                <tr>
+                                <span class="small px-2 py-1 rounded-2"
+                                      style="background-color: #0F172A; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.08);">
+                                    <i class="bi bi-calendar-range me-1"></i>
+                                    @inicioTexto —
+                                    @if (esActual)
+                                    {
+                                        <span class="fw-semibold" style="color: #34D399;">Actualidad</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@finTexto</span>
+                                    }
+                                </span>
+                            </div>
 
-                    <th>Id</th>
+                            <h5 class="fw-bold text-white mb-2">@experiencia.Cargo</h5>
 
-                    <th>PerfilProfesionalId</th>
-                    <th>Cargo</th>
-                    <th>Empresa</th>
-                    <th>Descripcion</th>
-                    <th>FechaInicio</th>
-                    <th>FechaFin</th>
-                   
+                            @if (!string.IsNullOrWhiteSpace(experiencia.Descripcion))
+                            {
+                                <p class="mb-0" style="color: #CBD5E1; font-size: 0.95rem; line-height: 1.6; white-space: pre-line;">
+                                    @experiencia.Descripcion
+                                </p>
+                            }
+                        </div>
 
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var experiencia in Experienciaprofesional!)
-
-                {
-
-                    <tr>
-
-
-                         
-
-                        <td>
-
-                            @experiencia.Id
-
-                        </td>
-                        <td>@experiencia.PerfilProfesionalId</td>
-                        <td>@experiencia.Cargo</td>
-                        <td>@experiencia.Empresa</td>
-                        <td>@experiencia.Descripcion</td>
-                        <td>@experiencia.FechaInicio</td>
-                        <td>@experiencia.FechaFin</td>
-
-                        
-                        
-                        <td>
-
-                            <a href="/Experiencias/edit/@experiencia.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(experiencia))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
- 
-
+                        <!-- Botones de acción -->
+                        <div class="d-flex gap-2">
+                            <a href="/Experiencias/edit/@experiencia.Id" class="btn btn-sm btn-warning px-3">
+                                Editar
+                            </a>
+                            <button class="btn btn-sm btn-danger px-3" @onclick=@(() => DeleteAsync(experiencia))>
+                                Borrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
-    // Cambia 'experiencias' por 'Experienciaprofesional' en estas 4 líneas:
     public List<Experiencia>? Experienciaprofesional { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -132,7 +106,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar este registro de experiencia?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

@@ -7,20 +7,85 @@
             var photo = context.User.Claims.FirstOrDefault(x => x.Type == "Photo")?.Value;
             var apiUrl = Configuration["UrlAPI"] ?? "https://localhost:7087/";
         }
-        <div class="d-flex align-items-center gap-2">
-            @if (!string.IsNullOrEmpty(photo))
-            {
-                <img src="@($"{apiUrl.TrimEnd('/')}/{photo.TrimStart('/')}")"
-                     alt="Foto de perfil"
-                     class="rounded-circle border"
-                     style="width: 36px; height: 36px; object-fit: cover;" />
-            }
-            <span>Hola, @context.User.Identity?.Name</span>
-            <a href="Logout" class="nav-link btn btn-link">Cerrar Sesión</a>
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                @if (!string.IsNullOrEmpty(photo))
+                {
+                    <img src="@($"{apiUrl.TrimEnd('/')}/{photo.TrimStart('/')}")"
+                         alt="Foto de perfil"
+                         class="rounded-circle"
+                         style="width: 34px; height: 34px; object-fit: cover; border: 2px solid rgba(99, 102, 241, 0.7);" />
+                }
+                else
+                {
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 34px; height: 34px; background-color: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.5); color: #A5B4FC;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                }
+                <span class="small fw-medium d-none d-sm-inline" style="color: #E2E8F0; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                      title="@context.User.Identity?.Name">
+                    @context.User.Identity?.Name
+                </span>
+            </div>
+
+            <a href="Logout" class="btn-auth-logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Cerrar Sesión</span>
+            </a>
         </div>
     </Authorized>
     <NotAuthorized>
-        <a href="Register" class="nav-link btn btn-link">Registro</a>
-        <a href="Login" class="nav-link btn btn-link">Iniciar Sesión</a>
+        <a href="login" class="btn-auth-login">
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Iniciar Sesión</span>
+        </a>
     </NotAuthorized>
 </AuthorizeView>
+
+<style>
+    .btn-auth-logout {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.38rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.78rem !important;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: #FCA5A5 !important;
+        background-color: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .btn-auth-logout:hover {
+        background-color: rgba(239, 68, 68, 0.24);
+        border-color: rgba(248, 113, 113, 0.6);
+        color: #FFFFFF !important;
+        transform: translateY(-1px);
+    }
+
+    .btn-auth-login {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.42rem 1rem;
+        border-radius: 999px;
+        font-size: 0.78rem !important;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: #FFFFFF !important;
+        background-color: #6366F1;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-auth-login:hover {
+        background-color: #4F46E5;
+        transform: translateY(-1px);
+    }
+</style>

@@ -14,9 +14,7 @@ namespace DevWork.Shared.Models
         [Required(ErrorMessage = "El ID de la publicación es obligatorio")]
         public int PublicacionId { get; set; }
 
-        // ID del perfil profesional o usuario que se postula
-        [Range(1, int.MaxValue, ErrorMessage = "El ID del perfil profesional es obligatorio")]
-        [Required(ErrorMessage = "El ID del perfil profesional es obligatorio")]
+        // ID del perfil profesional o usuario que se postula (asignado automáticamente en el backend)
         public int PerfilProfesionalId { get; set; }
 
         // Mensaje o propuesta que escribe el desarrollador
@@ -24,7 +22,7 @@ namespace DevWork.Shared.Models
         [Required(ErrorMessage = "El mensaje de la propuesta es obligatorio")]
         public string PropuestaMensaje { get; set; } = string.Empty;
 
-        // Estado de la postulación (ej: "Pendiente", "Aceptada", "Rechazada")}
+        // Estado de la postulación (ej: "Pendiente", "Aceptada", "Rechazada")
         [StringLength(50, ErrorMessage = "El estado de la postulación no puede tener más de 50 caracteres")]
         [Required(ErrorMessage = "El estado de la postulación es obligatorio")]
         public string Estado { get; set; } = "Pendiente";

@@ -21,6 +21,8 @@ namespace DevWork.API.Helpers
 
         Task<bool> IsUserInRoleAsync(User user, string roleName);
 
+        Task<IdentityResult> UpdateUserAsync(User user);
+
         Task LogoutAsync();
 
         Task<string> GenerateEmailConfirmationTokenAsync(User user);

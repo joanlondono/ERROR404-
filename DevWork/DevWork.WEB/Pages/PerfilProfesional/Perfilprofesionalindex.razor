@@ -1,79 +1,745 @@
 ﻿@page "/Perfiles"
+@attribute [Authorize]
 @using DevWork.Shared.Models
+@using DevWork.Shared.DTOs
+@using DevWork.WEB.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
+@inject IConfiguration Configuration
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILoginService loginService
 
-<h3>Perfil Profesional</h3>
+<PageTitle>Perfiles Profesionales - DevWork</PageTitle>
 
-<div class="mb-3">
-    <a class="btn btn-primary" href="perfiles/create">New PerfilProfesional</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">@(esAdmin ? "Gestión de Perfiles Profesionales" : "Talento y Perfiles")</h3>
+        <small style="color: #94A3B8;">
+            @(esAdmin ? "Administra los perfiles registrados en la plataforma" : "Gestiona tu perfil profesional o explora desarrolladores disponibles")
+        </small>
+    </div>
+
+    @if (!esAdmin)
+    {
+        <div class="d-flex gap-2 p-1 rounded-3" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08);">
+            <button type="button"
+                    class="btn btn-sm @(tabActiva == "mi-perfil" ? "btn-primary" : "text-light border-0")"
+                    @onclick='() => tabActiva = "mi-perfil"'>
+                Mi Perfil
+            </button>
+            <button type="button"
+                    class="btn btn-sm @(tabActiva == "directorio" ? "btn-primary" : "text-light border-0")"
+                    @onclick='() => tabActiva = "directorio"'>
+                Explorar Talento (@todosLosPerfiles.Count)
+            </button>
+        </div>
+    }
 </div>
 
-<GenericList MyList="PerfilesProfesionales">
-    <Body>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>UserId</th>
-                    <th>NombreCompleto</th>
-                    <th>TituloProfesional</th>
-                    <th>Biografia</th>
-                    <th>HabilidadesTecnicas</th>
-                    <th>AreaEspecialidad</th>
-                    <th>TarifaHora</th>
-                    <th>EnlaceGithub</th>
-                    <th>EnlaceLinkedin</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var PF in PerfilesProfesionales!)
-                {
-                    <tr>
-                        <td>@PF.Id</td>
-                        <td>@PF.UserId</td>
-                        <td>@PF.NombreCompleto</td>
-                        <td>@PF.TituloProfesional</td>
-                        <td>@PF.Biografia</td>
-                        <td>@PF.HabilidadesTecnicas</td>
-                        <td>@PF.AreaEspecialidad</td>
-                        <td>@PF.TarifaHora</td>
-                        <td>@PF.EnlaceGitHub</td>
-                        <td>@PF.EnlaceLinkedIn</td>
-                        <td>
-                            <a href="perfiles/edit/@PF.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick="@(() => DeleteAsync(PF))">Borrar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </Body>
-</GenericList>
+@if (cargando)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+}
+else if (!esAdmin && tabActiva == "mi-perfil")
+{
+    @if (miPerfil == null)
+    {
+        <div class="profile-empty-card text-center p-5">
+            <h4 class="fw-bold mb-2 text-white">Aún no has creado tu Perfil Profesional</h4>
+            <p style="color: #94A3B8;" class="mb-4">Agrega tu título, biografía, habilidades técnicas y tarifa para postularte a proyectos.</p>
+            <a class="btn btn-primary px-4 py-2" href="perfiles/create">
+                + Crear Perfil Profesional
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- TARJETA PRINCIPAL DE MI PERFIL -->
+        <div class="profile-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <AuthorizeView>
+                        <Authorized>
+                            @{
+                                var photo = context.User.Claims.FirstOrDefault(x => x.Type == "Photo")?.Value;
+                                var apiUrl = Configuration["UrlAPI"] ?? "https://localhost:7087/";
+                            }
+                            <div class="position-relative d-inline-block">
+                                <label for="inputFotoPerfil"
+                                       title="Cambiar foto de perfil"
+                                       style="cursor: pointer; margin: 0;">
+                                    @if (!string.IsNullOrEmpty(photo))
+                                    {
+                                        <div class="profile-photo-ring shadow-sm">
+                                            <img src="@($"{apiUrl.TrimEnd('/')}/{photo.TrimStart('/')}")"
+                                                 alt="Foto de perfil"
+                                                 class="rounded-circle"
+                                                 style="width: 82px; height: 82px; object-fit: cover; opacity: @(subiendoFoto ? "0.5" : "1");" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="profile-photo-ring shadow-sm">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                                 style="width: 82px; height: 82px; background-color: #1E1B4B; font-size: 1.75rem; border: 3px solid #111827; opacity: @(subiendoFoto ? "0.5" : "1");">
+                                                @(string.IsNullOrEmpty(miPerfil.NombreCompleto) ? "U" : miPerfil.NombreCompleto.Substring(0, 1).ToUpper())
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <!-- Botón flotante de cámara -->
+                                    <span class="position-absolute bottom-0 end-0 d-flex align-items-center justify-content-center rounded-circle shadow"
+                                          style="width: 28px; height: 28px; background-color: #6366F1; color: #FFFFFF; border: 2px solid #0F172A;">
+                                        @if (subiendoFoto)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" style="width: 0.75rem; height: 0.75rem;"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-camera-fill" style="font-size: 0.75rem;"></i>
+                                        }
+                                    </span>
+                                </label>
+
+                                <InputFile id="inputFotoPerfil"
+                                           OnChange="OnFotoSeleccionadaAsync"
+                                           accept="image/png, image/jpeg, image/webp"
+                                           style="display: none;" />
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <div>
+                        <span class="badge-area mb-1">@miPerfil.AreaEspecialidad</span>
+                        <h2 class="fw-bold mb-0 text-white">@miPerfil.NombreCompleto</h2>
+                        <p style="color: #94A3B8;" class="fw-medium mb-1">@miPerfil.TituloProfesional</p>
+                        <label for="inputFotoPerfil"
+                               class="small text-decoration-underline"
+                               style="color: #818CF8; cursor: pointer;">
+                            @(subiendoFoto ? "Actualizando foto..." : "Cambiar foto de perfil")
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="perfiles/edit/@miPerfil.Id" class="btn btn-warning">
+                        Editar
+                    </a>
+                    <button class="btn btn-danger" @onclick="@(() => DeleteAsync(miPerfil))">
+                        Borrar
+                    </button>
+                </div>
+            </div>
+
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <h6 class="text-uppercase fw-bold small mb-2" style="color: #94A3B8;">Biografía</h6>
+                    <p style="color: #E2E8F0; line-height: 1.6;">
+                        @miPerfil.Biografia
+                    </p>
+
+                    <h6 class="text-uppercase fw-bold small mt-4 mb-2" style="color: #94A3B8;">Habilidades Técnicas</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (!string.IsNullOrEmpty(miPerfil.HabilidadesTecnicas))
+                        {
+                            @foreach (var skill in miPerfil.HabilidadesTecnicas.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="badge-oferta">@skill.Trim()</span>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="profile-side-box">
+                        <div class="mb-3">
+                            <span class="small d-block" style="color: #94A3B8;">Tarifa por Hora</span>
+                            <span class="fs-4 fw-bold text-white">$@miPerfil.TarifaHora.ToString("N2")</span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            @if (!string.IsNullOrEmpty(miPerfil.EnlaceGitHub))
+                            {
+                                <a href="@miPerfil.EnlaceGitHub" target="_blank" class="btn btn-outline-light btn-sm">
+                                    GitHub
+                                </a>
+                            }
+
+                            @if (!string.IsNullOrEmpty(miPerfil.EnlaceLinkedIn))
+                            {
+                                <a href="@miPerfil.EnlaceLinkedIn" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    LinkedIn
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN CONECTADA 1: EXPERIENCIA PROFESIONAL -->
+        <div class="profile-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-0 text-white">Experiencia Profesional</h4>
+                    <small style="color: #94A3B8;">Trayectoria laboral asociada a este perfil</small>
+                </div>
+                <a href="/ExperienciaProfesional/Create" class="btn btn-primary btn-sm px-3 shadow-sm">
+                    + Agregar Experiencia
+                </a>
+            </div>
+
+            @if (!misExperiencias.Any())
+            {
+                <div class="text-center p-4 rounded-3" style="background-color: #0F172A; border: 1px dashed rgba(255,255,255,0.15);">
+                    <p class="mb-2" style="color: #CBD5E1;">Aún no has registrado experiencia laboral en tu perfil.</p>
+                    <a href="/ExperienciaProfesional/Create" class="btn btn-sm btn-outline-primary">
+                        Registrar mi primera experiencia
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var exp in misExperiencias.OrderByDescending(e => e.FechaInicio))
+                    {
+                        string inicioTexto = "Sin fecha de inicio";
+                        if (exp.FechaInicio.Year > 1)
+                        {
+                            inicioTexto = exp.FechaInicio.ToString("MMM yyyy");
+                        }
+
+                        bool esActual = true;
+                        string finTexto = "Actualidad";
+                        if (exp.FechaFin.HasValue && exp.FechaFin.Value.Year > 1)
+                        {
+                            esActual = false;
+                            finTexto = exp.FechaFin.Value.ToString("MMM yyyy");
+                        }
+
+                        <div class="p-3 rounded-3" style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <span class="badge-area">@exp.Empresa</span>
+                                        <span class="small px-2 py-1 rounded-2"
+                                              style="background-color: #1E293B; color: #CBD5E1;">
+                                            <i class="bi bi-calendar-range me-1"></i>
+                                            @inicioTexto —
+                                            @if (esActual)
+                                            {
+                                                <span class="fw-semibold" style="color: #34D399;">Actualidad</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@finTexto</span>
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <h5 class="fw-bold text-white mb-1">@exp.Cargo</h5>
+
+                                    @if (!string.IsNullOrWhiteSpace(exp.Descripcion))
+                                    {
+                                        <p class="mb-0 small" style="color: #CBD5E1; line-height: 1.6; white-space: pre-line;">
+                                            @exp.Descripcion
+                                        </p>
+                                    }
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a href="/Experiencias/edit/@exp.Id" class="btn btn-sm btn-warning px-3">
+                                        Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger px-3" @onclick="@(() => DeleteExperienciaAsync(exp))">
+                                        Borrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- SECCIÓN CONECTADA 2: EDUCACIÓN -->
+        <div class="profile-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-0 text-white">Educación</h4>
+                    <small style="color: #94A3B8;">Formación académica, títulos e instituciones</small>
+                </div>
+                <a href="educacion/create" class="btn btn-primary btn-sm px-3 shadow-sm">
+                    + Agregar Educación
+                </a>
+            </div>
+
+            @if (!misEducaciones.Any())
+            {
+                <div class="text-center p-4 rounded-3" style="background-color: #0F172A; border: 1px dashed rgba(255,255,255,0.15);">
+                    <p class="mb-2" style="color: #CBD5E1;">Aún no has registrado formación académica en tu perfil.</p>
+                    <a href="educacion/create" class="btn btn-sm btn-outline-primary">
+                        Registrar mi primera formación
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var edu in misEducaciones.OrderByDescending(e => e.FechaInicio))
+                    {
+                        string inicioEdu = "Sin fecha de inicio";
+                        if (edu.FechaInicio.Year > 1)
+                        {
+                            inicioEdu = edu.FechaInicio.ToString("MMM yyyy");
+                        }
+
+                        bool enCurso = true;
+                        string finEdu = "En curso";
+                        if (edu.FechaFin.HasValue && edu.FechaFin.Value.Year > 1)
+                        {
+                            enCurso = false;
+                            finEdu = edu.FechaFin.Value.ToString("MMM yyyy");
+                        }
+
+                        <div class="p-3 rounded-3" style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <span class="badge-area">@edu.Institucion</span>
+                                        <span class="small px-2 py-1 rounded-2"
+                                              style="background-color: #1E293B; color: #CBD5E1;">
+                                            <i class="bi bi-mortarboard me-1"></i>
+                                            @inicioEdu —
+                                            @if (enCurso)
+                                            {
+                                                <span class="fw-semibold" style="color: #34D399;">En curso</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@finEdu</span>
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <h5 class="fw-bold text-white mb-0">@edu.Titulo</h5>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a href="educacion/edit/@edu.Id" class="btn btn-sm btn-warning px-3">
+                                        Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger px-3" @onclick="@(() => DeleteEducacionAsync(edu))">
+                                        Borrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- SECCIÓN CONECTADA 3: CERTIFICACIONES -->
+        <div class="profile-card p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-0 text-white">Certificaciones</h4>
+                    <small style="color: #94A3B8;">Cursos, diplomas y credenciales verificables</small>
+                </div>
+                <a href="/certificaciones/Create" class="btn btn-primary btn-sm px-3 shadow-sm">
+                    + Agregar Certificación
+                </a>
+            </div>
+
+            @if (!misCertificaciones.Any())
+            {
+                <div class="text-center p-4 rounded-3" style="background-color: #0F172A; border: 1px dashed rgba(255,255,255,0.15);">
+                    <p class="mb-2" style="color: #CBD5E1;">Aún no has agregado certificaciones o credenciales a tu perfil.</p>
+                    <a href="/certificaciones/Create" class="btn btn-sm btn-outline-primary">
+                        Registrar mi primera certificación
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var cert in misCertificaciones.OrderByDescending(c => c.FechaObtencion))
+                    {
+                        string fechaCert = "Sin fecha registrada";
+                        if (cert.FechaObtencion.Year > 1)
+                        {
+                            fechaCert = cert.FechaObtencion.ToString("MMM yyyy");
+                        }
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between"
+                                 style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                                <div>
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                        <span class="badge-area">@cert.EnteEmisor</span>
+                                        <small style="color: #94A3B8;">
+                                            <i class="bi bi-award me-1"></i>@fechaCert
+                                        </small>
+                                    </div>
+
+                                    <h6 class="fw-bold text-white mb-2">@cert.Nombre</h6>
+
+                                    @if (!string.IsNullOrWhiteSpace(cert.UrlCredencial))
+                                    {
+                                        <a href="@cert.UrlCredencial"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-primary mb-3">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> Verificar credencial
+                                        </a>
+                                    }
+                                </div>
+
+                                <div class="pt-2 border-top d-flex gap-2" style="border-color: rgba(255,255,255,0.06) !important;">
+                                    <a href="/certificaciones/edit/@cert.Id" class="btn btn-sm btn-warning flex-fill">
+                                        Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger flex-fill" @onclick="@(() => DeleteCertificacionAsync(cert))">
+                                        Borrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <!-- DIRECTORIO DE TALENTO -->
+    <div class="mb-4 d-flex gap-2">
+        <input type="text"
+               class="form-control"
+               style="color: #F8FAFC;"
+               placeholder="Buscar por nombre o título profesional (ej. Full Stack, C#, Frontend)..."
+               @bind="filtroTexto"
+               @bind:event="oninput"
+               @onkeyup="BuscarPerfilesAsync" />
+        @if (!string.IsNullOrWhiteSpace(filtroTexto))
+        {
+            <button class="btn btn-outline-light" @onclick="LimpiarFiltroAsync">Limpiar</button>
+        }
+    </div>
+
+    @if (!todosLosPerfiles.Any())
+    {
+        <div class="profile-empty-card text-center p-5">
+            <h5 class="fw-bold mb-1 text-white">No se encontraron perfiles</h5>
+            <p style="color: #94A3B8;" class="mb-0">No hay perfiles registrados o que coincidan con la búsqueda.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var perfil in todosLosPerfiles)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="profile-card h-100 d-flex flex-column justify-content-between p-4">
+                        <div>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="profile-photo-ring">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                         style="width: 52px; height: 52px; background-color: #1E1B4B; font-size: 1.2rem; border: 2px solid #111827;">
+                                        @(string.IsNullOrEmpty(perfil.NombreCompleto) ? "U" : perfil.NombreCompleto.Substring(0, 1).ToUpper())
+                                    </div>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <span class="badge-area mb-1">@perfil.AreaEspecialidad</span>
+                                    <h5 class="fw-bold mb-0 text-truncate text-white">@perfil.NombreCompleto</h5>
+                                    <small style="color: #94A3B8;" class="d-block text-truncate">@perfil.TituloProfesional</small>
+                                </div>
+                            </div>
+
+                            <p class="small mb-3" style="color: #CBD5E1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                @perfil.Biografia
+                            </p>
+
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                @if (!string.IsNullOrEmpty(perfil.HabilidadesTecnicas))
+                                {
+                                    @foreach (var skill in perfil.HabilidadesTecnicas.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                                    {
+                                        <span class="badge-oferta" style="font-size: 0.72rem;">@skill.Trim()</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="pt-3 mt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <span class="small d-block" style="font-size: 0.72rem; color: #94A3B8;">Tarifa/hora</span>
+                                    <span class="fw-bold text-white">$@perfil.TarifaHora.ToString("N2")</span>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    @if (!string.IsNullOrEmpty(perfil.EnlaceGitHub))
+                                    {
+                                        <a href="@perfil.EnlaceGitHub" target="_blank" class="btn btn-sm btn-outline-light">GitHub</a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(perfil.EnlaceLinkedIn))
+                                    {
+                                        <a href="@perfil.EnlaceLinkedIn" target="_blank" class="btn btn-sm btn-outline-primary">LinkedIn</a>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (esAdmin)
+                            {
+                                <div class="d-flex gap-2 mt-3 pt-2 border-top" style="border-color: rgba(255,255,255,0.06) !important;">
+                                    <a href="perfiles/edit/@perfil.Id" class="btn btn-sm btn-warning flex-fill">Editar</a>
+                                    <button class="btn btn-sm btn-danger flex-fill" @onclick="@(() => DeleteAsync(perfil))">Borrar</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
 
 @code {
-    public List<PerfilProfesional>? PerfilesProfesionales { get; set; }
+    private PerfilProfesional? miPerfil;
+    private List<Experiencia> misExperiencias = new();
+    private List<Educacion> misEducaciones = new();
+    private List<Certificacion> misCertificaciones = new();
+    private List<PerfilProfesional> todosLosPerfiles = new();
+    private string tabActiva = "mi-perfil";
+    private string filtroTexto = string.Empty;
+    private bool cargando = true;
+    private bool esAdmin = false;
+    private bool subiendoFoto = false;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        esAdmin = user.IsInRole("Admin") || user.IsInRole("Administrador");
+
+        if (esAdmin)
+        {
+            tabActiva = "directorio";
+        }
+
         await Load();
+    }
+
+    private async Task OnFotoSeleccionadaAsync(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo == null) return;
+
+        subiendoFoto = true;
+        try
+        {
+            // Redimensionamos a máximo 400x400 para que suba rápido y nítido
+            var imagenRedimensionada = await archivo.RequestImageFileAsync("image/jpeg", 400, 400);
+            var buffer = new byte[imagenRedimensionada.Size];
+            await using var stream = imagenRedimensionada.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            await stream.ReadExactlyAsync(buffer);
+
+            var dto = new UpdatePhotoDTO
+            {
+                Photo = Convert.ToBase64String(buffer)
+            };
+
+            var response = await repository.PutAsync<UpdatePhotoDTO, TokenDTO>("api/Accounts/UpdatePhoto", dto);
+            if (response.Error)
+            {
+                var mensajeError = await response.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+                return;
+            }
+
+            // Renueva el JWT en memoria y localStorage para que cambie la foto al instante en toda la app
+            await loginService.LoginAsync(response.Response!.Token);
+            StateHasChanged();
+
+            await swal.FireAsync("¡Foto actualizada!", "Tu foto de perfil se ha guardado correctamente.", SweetAlertIcon.Success);
+        }
+        catch (Exception ex)
+        {
+            await swal.FireAsync("Error", $"No se pudo procesar la imagen: {ex.Message}", SweetAlertIcon.Error);
+        }
+        finally
+        {
+            subiendoFoto = false;
+        }
     }
 
     private async Task Load()
     {
-        var responseHttp = await repository.GetAsync<List<PerfilProfesional>>("api/perfilesprofesionales");
-        
-        if (responseHttp.Error)
+        cargando = true;
+        try
         {
-            var mensajeError = await responseHttp.GetErrorMessageAsync();
-            await swal.FireAsync("Error", $"No se pudieron cargar los perfiles: {mensajeError}", SweetAlertIcon.Error);
-            PerfilesProfesionales = new List<PerfilProfesional>();
-            return;
-        }
+            if (!esAdmin)
+            {
+                var respMiPerfil = await repository.GetAsync<PerfilProfesional>("api/perfilesprofesionales/mi-perfil");
+                if (!respMiPerfil.Error)
+                {
+                    miPerfil = respMiPerfil.Response;
+                    await CargarMisExperienciasAsync();
+                    await CargarMisEducacionesAsync();
+                    await CargarMisCertificacionesAsync();
+                }
+                else if (respMiPerfil.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    miPerfil = null;
+                    misExperiencias = new();
+                    misEducaciones = new();
+                    misCertificaciones = new();
+                }
+            }
 
-        PerfilesProfesionales = responseHttp.Response!;
+            var respTodos = await repository.GetAsync<List<PerfilProfesional>>("api/perfilesprofesionales");
+            if (!respTodos.Error && respTodos.Response != null)
+            {
+                todosLosPerfiles = respTodos.Response;
+            }
+        }
+        catch (Exception)
+        {
+            await swal.FireAsync("Sin conexión", "No se pudo conectar con DevWork.API.", SweetAlertIcon.Warning);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CargarMisExperienciasAsync()
+    {
+        var respExp = await repository.GetAsync<List<Experiencia>>("api/experiencias");
+        if (!respExp.Error && respExp.Response != null)
+        {
+            misExperiencias = respExp.Response;
+        }
+    }
+
+    private async Task DeleteExperienciaAsync(Experiencia item)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = $"¿Está seguro que quieres borrar la experiencia en {item.Empresa}?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value)) return;
+
+        var resp = await repository.DeleteAsync($"api/experiencias/{item.Id}");
+        if (resp.Error)
+        {
+            var mensajeError = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+            await CargarMisExperienciasAsync();
+        }
+    }
+
+    private async Task CargarMisEducacionesAsync()
+    {
+        var respEdu = await repository.GetAsync<List<Educacion>>("api/educaciones");
+        if (!respEdu.Error && respEdu.Response != null)
+        {
+            misEducaciones = respEdu.Response;
+        }
+    }
+
+    private async Task DeleteEducacionAsync(Educacion item)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = $"¿Está seguro que quieres borrar el registro de {item.Titulo} en {item.Institucion}?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value)) return;
+
+        var resp = await repository.DeleteAsync($"api/educaciones/{item.Id}");
+        if (resp.Error)
+        {
+            var mensajeError = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+            await CargarMisEducacionesAsync();
+        }
+    }
+
+    private async Task CargarMisCertificacionesAsync()
+    {
+        var respCert = await repository.GetAsync<List<Certificacion>>("api/certificaciones");
+        if (!respCert.Error && respCert.Response != null)
+        {
+            misCertificaciones = respCert.Response;
+        }
+    }
+
+    private async Task DeleteCertificacionAsync(Certificacion item)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Confirmación",
+            Text = $"¿Está seguro que quieres borrar la certificación {item.Nombre}?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        if (string.IsNullOrEmpty(result.Value)) return;
+
+        var resp = await repository.DeleteAsync($"api/certificaciones/{item.Id}");
+        if (resp.Error)
+        {
+            var mensajeError = await resp.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+        }
+        else
+        {
+            await CargarMisCertificacionesAsync();
+        }
+    }
+
+    private async Task BuscarPerfilesAsync()
+    {
+        var url = string.IsNullOrWhiteSpace(filtroTexto)
+            ? "api/perfilesprofesionales"
+            : $"api/perfilesprofesionales/filter?text={Uri.EscapeDataString(filtroTexto)}";
+
+        var resp = await repository.GetAsync<List<PerfilProfesional>>(url);
+        if (!resp.Error && resp.Response != null)
+        {
+            todosLosPerfiles = resp.Response;
+        }
+    }
+
+    private async Task LimpiarFiltroAsync()
+    {
+        filtroTexto = string.Empty;
+        await BuscarPerfilesAsync();
     }
 
     private async Task DeleteAsync(PerfilProfesional perfilProfesional)
@@ -81,13 +747,12 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = $"¿Está seguro que quieres borrar el perfil de {perfilProfesional.NombreCompleto}?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
-        var confirm = string.IsNullOrEmpty(result.Value);
-        if (confirm)
+        if (string.IsNullOrEmpty(result.Value))
         {
             return;
         }
@@ -96,35 +761,19 @@
 
         if (responseHTTP.Error)
         {
-            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                navigationManager.NavigateTo("Perfiles");
-            }
-            else
-            {
-                var mensajeError = await responseHTTP.GetErrorMessageAsync();
-                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
-            }
+            var mensajeError = await responseHTTP.GetErrorMessageAsync();
+            await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
         }
         else
         {
+            if (miPerfil?.Id == perfilProfesional.Id)
+            {
+                miPerfil = null;
+                misExperiencias = new();
+                misEducaciones = new();
+                misCertificaciones = new();
+            }
             await Load();
         }
     }
 }
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-

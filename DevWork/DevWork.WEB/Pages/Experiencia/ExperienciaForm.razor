@@ -2,47 +2,93 @@
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="profile-card p-4">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Id de perfil profesional:</label>
-        <InputNumber class="form-control" @bind-Value="Experiencia.PerfilProfesionalId" />
-        <ValidationMessage For="@(() => Experiencia.PerfilProfesionalId)" />
-    </div>
-    <div class="mb-3">
-        <label>Cargo:</label>
-        <InputText class="form-control" @bind-Value="Experiencia.Cargo" />
-        <ValidationMessage For="@(() => Experiencia.Cargo)" />
-    </div>
-    <div class="mb-3">
-        <label>Empresa:</label>
-        <InputText class="form-control" @bind-Value="Experiencia.Empresa" />
-        <ValidationMessage For="@(() => Experiencia.Empresa)" />
-    </div>
-    <div class="mb-3">
-        <label>Descripción:</label>
-        <InputTextArea class="form-control" @bind-Value="Experiencia.Descripcion" />
-        <ValidationMessage For="@(() => Experiencia.Descripcion)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de inicio:</label>
-        <InputDate class="form-control" @bind-Value="Experiencia.FechaInicio" />
-        <ValidationMessage For="@(() => Experiencia.FechaInicio)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de finalización:</label>
-        <InputDate class="form-control" @bind-Value="Experiencia.FechaFin" />
-        <ValidationMessage For="@(() => Experiencia.FechaFin)" />
-    </div>
+        <div class="row g-3">
+            <!-- Cargo -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Cargo o puesto</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Desarrollador Full-Stack .NET"
+                           @bind-Value="Experiencia.Cargo" />
+                <ValidationMessage For="@(() => Experiencia.Cargo)" />
+            </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+            <!-- Empresa -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Empresa u organización</label>
+                <InputText class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="Ej: Tech Solutions S.A.S."
+                           @bind-Value="Experiencia.Empresa" />
+                <ValidationMessage For="@(() => Experiencia.Empresa)" />
+            </div>
+
+            <!-- Descripción -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Descripción de funciones y logros</label>
+                <InputTextArea class="form-control"
+                               rows="4"
+                               maxlength="500"
+                               style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                               placeholder="Describe tus principales responsabilidades, tecnologías utilizadas y logros..."
+                               @bind-Value="Experiencia.Descripcion" />
+                <div class="d-flex justify-content-between mt-1">
+                    <ValidationMessage For="@(() => Experiencia.Descripcion)" />
+                    <small style="color: #94A3B8;">@(Experiencia.Descripcion?.Length ?? 0) / 500 caracteres</small>
+                </div>
+            </div>
+
+            <!-- Fecha de inicio -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Fecha de inicio</label>
+                <InputDate class="form-control"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           @bind-Value="Experiencia.FechaInicio" />
+                <ValidationMessage For="@(() => Experiencia.FechaInicio)" />
+            </div>
+
+            <!-- Fecha de finalización -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Fecha de finalización</label>
+                <InputDate class="form-control"
+                           disabled="@trabajoActual"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           @bind-Value="Experiencia.FechaFin" />
+                <ValidationMessage For="@(() => Experiencia.FechaFin)" />
+
+                <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="chkTrabajoActual"
+                           checked="@trabajoActual"
+                           @onchange="OnTrabajoActualChanged" />
+                    <label class="form-check-label small" for="chkTrabajoActual" style="color: #CBD5E1;">
+                        Actualmente trabajo aquí
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm" type="submit">
+                <i class="bi bi-check-lg me-1"></i> Guardar Experiencia
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;
+    private bool trabajoActual = false;
 
     [EditorRequired]
     [Parameter]
@@ -60,7 +106,33 @@
 
     protected override void OnInitialized()
     {
+        // Si es una experiencia nueva y FechaInicio viene en 01/01/0001, poner la fecha de hoy
+        if (Experiencia.FechaInicio.Year <= 1)
+        {
+            Experiencia.FechaInicio = DateTime.Today;
+        }
+
+        // Si estamos editando una experiencia existente sin fecha de fin, marcar "Actualmente trabajo aquí"
+        if (Experiencia.Id > 0 && (!Experiencia.FechaFin.HasValue || Experiencia.FechaFin.Value.Year <= 1))
+        {
+            trabajoActual = true;
+            Experiencia.FechaFin = null;
+        }
+
         editContext = new EditContext(Experiencia);
+    }
+
+    private void OnTrabajoActualChanged(ChangeEventArgs e)
+    {
+        trabajoActual = e.Value is bool b && b;
+        if (trabajoActual)
+        {
+            Experiencia.FechaFin = null;
+        }
+        else if (!Experiencia.FechaFin.HasValue)
+        {
+            Experiencia.FechaFin = DateTime.Today;
+        }
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

@@ -1,116 +1,81 @@
 ﻿@page "/preguntas"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
-
 @inject IRepository repository
 
+<PageTitle>Preguntas y Comentarios - DevWork</PageTitle>
 
-
-<h3>Pregunta</h3>
-
-<div class="mb-3">
-
- 
-
- 
-
-    <a class="btn btn-primary " href="/Preguntas/Create">New Pregunta</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0">Preguntas y Comentarios</h3>
+        <small class="text-muted">Consultas y discusión sobre las publicaciones disponibles</small>
+    </div>
+    <a class="btn btn-primary shadow-sm" href="/Preguntas/Create">
+        + Nueva Pregunta
+    </a>
 </div>
 
- 
+<div class="mb-4 d-flex gap-2">
+    <input type="text"
+           class="form-control"
+           placeholder="Filtrar comentarios por texto o número de publicación..."
+           @bind="filtroTexto"
+           @bind:event="oninput" />
+    @if (!string.IsNullOrWhiteSpace(filtroTexto))
+    {
+        <button class="btn btn-outline-dark" @onclick="() => filtroTexto = string.Empty">Limpiar</button>
+    }
+</div>
 
-<GenericList MyList="Preguntas">
-
-
+<GenericList MyList="PreguntasFiltradas">
     <Body>
+        <div class="d-flex flex-column gap-3">
+            @foreach (var pregunta in PreguntasFiltradas!)
+            {
+                <div class="profile-card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-oferta">Publicación #@pregunta.PublicacionId</span>
+                            <span class="text-muted small">Comentario #@pregunta.Id</span>
+                        </div>
 
-        <table class="table table-striped">
+                        <AuthorizeView Roles="Admin,Administrador">
+                            <Authorized>
+                                <div class="d-flex gap-2">
+                                    <a href="/Preguntas/edit/@pregunta.Id" class="btn btn-sm btn-warning">
+                                        Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" @onclick=@(() => DeleteAsync(pregunta))>
+                                        Borrar
+                                    </button>
+                                </div>
+                            </Authorized>
+                        </AuthorizeView>
+                    </div>
 
-            <thead>
-
-                <tr>
-
-                    <th>Id</th>
-
-                    <th>PublicacionId</th>
-                    <th>TextoPregunta</th>
-                   
-
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var pregunta in Preguntas!)
-
-                {
-
-                    <tr>
-
-                         
-
-                        <td>
-
-                            @pregunta.Id
-
-                        </td>
-
-                        <td>
-
-                            @pregunta.PublicacionId
-
-                        </td>
-                        <td>
-
-                            @pregunta.TextoPregunta
-
-                        </td> 
-
-                        
-                        <td>
-
-                            <a href="/Preguntas/edit/@pregunta.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(pregunta))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
- 
-
+                    <p class="mb-0" style="color: #E2E8F0; line-height: 1.6; white-space: pre-line;">
+                        @pregunta.TextoPregunta
+                    </p>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
-    // Asegúrate de que este nombre coincida en mayúsculas/minúsculas con tu HTML
     public List<Pregunta>? Preguntas { get; set; }
+    private string filtroTexto = string.Empty;
+
+    private List<Pregunta>? PreguntasFiltradas =>
+        Preguntas == null ? null :
+        string.IsNullOrWhiteSpace(filtroTexto)
+            ? Preguntas
+            : Preguntas.Where(p =>
+                (p.TextoPregunta?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                p.PublicacionId.ToString().Contains(filtroTexto.Trim()))
+              .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,7 +101,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar este comentario?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

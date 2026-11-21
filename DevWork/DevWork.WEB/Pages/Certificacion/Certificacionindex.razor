@@ -1,127 +1,75 @@
 ﻿@page "/certificaciones"
+@attribute [Authorize(Roles = "Admin,Administrador")]
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
-<h3>Certificacion</h3>
-<div class="mb-3">
 
- 
+<PageTitle>Certificaciones - DevWork</PageTitle>
 
- 
-
-    <a class="btn btn-primary " href="/certificaciones/Create">New Certificacion</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Certificaciones</h3>
+        <small style="color: #94A3B8;">Cursos, diplomas y credenciales verificables</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="/certificaciones/Create">
+        + Nueva Certificación
+    </a>
 </div>
 
- 
-
 <GenericList MyList="certificaciones">
-
-
     <Body>
-
-        <table class="table table-striped">
-
-            <thead>
-
-                <tr>
-
-                    <th>Id</th>
-
-                    <th>PerfilProfesionalId</th>
-                    <th>Nombre</th>
-                    <th>EnteEmisor</th>
-                    <th>FechaObtencion</th>
-                    <th>UrlCreedencial</th>
-
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var certificacion in certificaciones!)
-
+        <div class="row g-4">
+            @foreach (var certificacion in certificaciones!.OrderByDescending(c => c.FechaObtencion))
+            {
+                string fechaTexto = "Sin fecha registrada";
+                if (certificacion.FechaObtencion.Year > 1)
                 {
-
-                    <tr>
-
-                         
-
-                        <td>
-
-                            @certificacion.Id
-
-                        </td>
-
-                        <td>
-
-                            @certificacion.PerfilProfesionalId
-
-                        </td>
-                        <td>
-
-                            @certificacion.Nombre
-
-                        </td>
-                        <td>
-
-                            @certificacion.EnteEmisor
-
-                        </td>
-                        <td>
-
-                            @certificacion.FechaObtencion
-
-                        </td>
-                        <td>
-
-                            @certificacion.UrlCredencial
-
-                        </td>
-
-                        
-                        <td>
-
-                            <a href="/certificaciones/edit/@certificacion.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(certificacion))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
+                    fechaTexto = certificacion.FechaObtencion.ToString("MMM yyyy");
                 }
 
-            </tbody>
+                <div class="col-md-6 col-xl-4">
+                    <div class="profile-card h-100 d-flex flex-column justify-content-between p-4">
+                        <div>
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <span class="badge-area">@certificacion.EnteEmisor</span>
+                                <small style="color: #94A3B8;">
+                                    <i class="bi bi-award me-1"></i>@fechaTexto
+                                </small>
+                            </div>
 
-        </table>
+                            <h5 class="fw-bold text-white mb-3">@certificacion.Nombre</h5>
 
- 
+                            @if (!string.IsNullOrWhiteSpace(certificacion.UrlCredencial))
+                            {
+                                <a href="@certificacion.UrlCredencial"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Verificar credencial
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="small" style="color: #94A3B8;">Sin enlace de verificación</span>
+                            }
+                        </div>
 
+                        <div class="pt-3 mt-4 border-top d-flex gap-2" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <a href="/certificaciones/edit/@certificacion.Id" class="btn btn-sm btn-warning flex-fill">
+                                Editar
+                            </a>
+                            <button class="btn btn-sm btn-danger flex-fill" @onclick="@(() => DeleteAsync(certificacion))">
+                                Borrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
-    // Verifica si en tu HTML arriba dice MyList="Certificaciones" o MyList="certificaciones"
     public List<Certificacion>? certificaciones { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -148,7 +96,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar esta certificación?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

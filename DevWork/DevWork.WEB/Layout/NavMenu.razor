@@ -1,90 +1,175 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">DevWork.WEB</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
+<div class="app-shell">
+    <!-- Barra superior unificada (sin menú lateral) -->
+    <header class="top-navbar">
+        <div class="navbar-inner">
+            <a href="" class="brand-logo">
+                <i class="bi bi-code-slash text-primary me-2"></i>DevWork<span class="brand-dot">.</span>WEB
+            </a>
+
+            <nav class="top-nav-links">
+                <NavLink href="" Match="NavLinkMatch.All" class="top-nav-item">HOME</NavLink>
+                <NavLink href="/publicaciones" class="top-nav-item">PUBLICACIONES</NavLink>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <NavLink href="/aplicaciones" class="top-nav-item">APLICACIONES</NavLink>
+                        <NavLink href="/Perfiles" class="top-nav-item">
+                            <AuthorizeView Roles="Admin,Administrador" Context="adminContext">
+                                <Authorized>PERFILES</Authorized>
+                                <NotAuthorized>MI PERFIL</NotAuthorized>
+                            </AuthorizeView>
+                        </NavLink>
+                        <NavLink href="/preguntas" class="top-nav-item">PREGUNTAS</NavLink>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin,Administrador">
+                    <Authorized>
+                        <div class="dropdown">
+                            <button class="top-nav-item dropdown-toggle bg-transparent border-0 p-0"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                GESTIÓN
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow"
+                                style="background-color: #111827; border: 1px solid rgba(255,255,255,0.12);">
+                                <li><a class="dropdown-item small" href="/ExperienciaProfesional"><i class="bi bi-award me-2"></i>Experiencia</a></li>
+                                <li><a class="dropdown-item small" href="/educacion"><i class="bi bi-mortarboard me-2"></i>Educación</a></li>
+                                <li><a class="dropdown-item small" href="/certificaciones"><i class="bi bi-patch-check me-2"></i>Certificaciones</a></li>
+                                <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.08);" /></li>
+                                <li><a class="dropdown-item small" href="/users"><i class="bi bi-people me-2"></i>Usuarios</a></li>
+                                <li><a class="dropdown-item small" href="/roles"><i class="bi bi-shield-lock me-2"></i>Roles</a></li>
+                            </ul>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <span class="nav-separator"></span>
+
+                <AuthLinks />
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido principal centrado y limpio -->
+    <main class="main-container">
+        @Body
+    </main>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <!-- Visible para todos (incluso sin iniciar sesión) -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/publicaciones">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Publicacion
-            </NavLink>
-        </div>
-
-        <!-- Visible para cualquier usuario que haya iniciado sesión -->
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/aplicaciones">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Aplicacion
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/Perfiles">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Perfil Profesional
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/ExperienciaProfesional">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Experiencia
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/educacion">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Educacion
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/certificaciones">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Certificacion
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-
-        <!-- Visible únicamente para usuarios con rol Administrador -->
-        <AuthorizeView Roles="Admin,Administrador">
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/users">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> User
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/roles">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Role
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/preguntas">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Pregunta
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
+<style>
+    .app-shell {
+        min-height: 100vh;
+        width: 100%;
+        background-color: #0B1120;
+        color: #F8FAFC;
+        display: flex;
+        flex-direction: column;
     }
-}
+
+    .top-navbar {
+        width: 100%;
+        background-color: rgba(11, 17, 32, 0.92);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .navbar-inner {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 1.1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .brand-logo {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-decoration: none;
+        letter-spacing: 0.04em;
+    }
+
+    .brand-logo:hover {
+        color: #E2E8F0;
+    }
+
+    .brand-dot {
+        color: #6366F1;
+    }
+
+    .top-nav-links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.4rem;
+    }
+
+    .top-nav-item {
+        color: rgba(203, 213, 225, 0.85);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        padding-bottom: 4px;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .top-nav-item:hover {
+        color: #FFFFFF;
+    }
+
+    .top-nav-item.active {
+        color: #FFFFFF;
+        border-bottom-color: #6366F1;
+    }
+
+    .nav-separator {
+        width: 1px;
+        height: 18px;
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .top-nav-links ::deep a,
+    .top-nav-links ::deep span,
+    .top-nav-links ::deep button {
+        color: rgba(248, 250, 252, 0.9) !important;
+        font-size: 0.82rem;
+        text-decoration: none;
+    }
+
+    .main-container {
+        width: 100%;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 2.25rem 2rem;
+        flex: 1;
+    }
+
+    @@media (max-width: 768px) {
+        .navbar-inner {
+            padding: 1rem 1.25rem;
+            justify-content: center;
+        }
+
+        .top-nav-links {
+            justify-content: center;
+            gap: 0.9rem;
+        }
+
+        .main-container {
+            padding: 1.5rem 1.25rem;
+        }
+    }
+</style>

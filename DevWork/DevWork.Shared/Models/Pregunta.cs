@@ -16,5 +16,6 @@ namespace DevWork.Shared.Models
         [Required(ErrorMessage = "El texto de la pregunta es obligatorio")]
         [StringLength(200, ErrorMessage = "El texto de la pregunta no puede tener más de 200 caracteres")]
         public string TextoPregunta { get; set; } = string.Empty;
+        public int UserId { get; set; }
     }
 }

@@ -2,39 +2,73 @@
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="p-4 rounded-4 shadow-sm" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.08); max-width: 720px;">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger small mb-3" />
 
-    <div class="mb-3">
-        <label>Id de publicación:</label>
-        <InputNumber class="form-control" @bind-Value="Aplicacion.PublicacionId" />
-        <ValidationMessage For="@(() => Aplicacion.PublicacionId)" />
-    </div>
-    <div class="mb-3">
-        <label>Id de perfil profesional:</label>
-        <InputNumber class="form-control" @bind-Value="Aplicacion.PerfilProfesionalId" />
-        <ValidationMessage For="@(() => Aplicacion.PerfilProfesionalId)" />
-    </div>
-    <div class="mb-3">
-        <label>Propuesta:</label>
-        <InputTextArea class="form-control" @bind-Value="Aplicacion.PropuestaMensaje" />
-        <ValidationMessage For="@(() => Aplicacion.PropuestaMensaje)" />
-    </div>
-    <div class="mb-3">
-        <label>Estado:</label>
-        <InputText class="form-control" @bind-Value="Aplicacion.Estado" />
-        <ValidationMessage For="@(() => Aplicacion.Estado)" />
-    </div>
-    <div class="mb-3">
-        <label>Fecha de postulación:</label>
-        <InputDate class="form-control" @bind-Value="Aplicacion.FechaPostulacion" />
-        <ValidationMessage For="@(() => Aplicacion.FechaPostulacion)" />
-    </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Id de Publicación</label>
+                <InputNumber class="form-control"
+                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                             @bind-Value="Aplicacion.PublicacionId" />
+                <ValidationMessage For="@(() => Aplicacion.PublicacionId)" class="text-danger small mt-1" />
+            </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Id de Perfil Profesional</label>
+                <InputNumber class="form-control"
+                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                             @bind-Value="Aplicacion.PerfilProfesionalId" />
+                <ValidationMessage For="@(() => Aplicacion.PerfilProfesionalId)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Estado</label>
+                <InputSelect class="form-select"
+                             style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                             @bind-Value="Aplicacion.Estado">
+                    <option value="">-- Selecciona un estado --</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En Revisión">En Revisión</option>
+                    <option value="Aceptada">Aceptada</option>
+                    <option value="Rechazada">Rechazada</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => Aplicacion.Estado)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Fecha de Postulación</label>
+                <InputDate class="form-control"
+                           style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                           @bind-Value="Aplicacion.FechaPostulacion" />
+                <ValidationMessage For="@(() => Aplicacion.FechaPostulacion)" class="text-danger small mt-1" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-semibold" style="color: #CBD5E1;">Mensaje de Propuesta</label>
+                <InputTextArea class="form-control"
+                               rows="4"
+                               placeholder="Describe tu propuesta, experiencia relevante o disponibilidad para el proyecto..."
+                               style="background-color: #0F172A; border-color: rgba(255,255,255,0.12); color: #F8FAFC;"
+                               @bind-Value="Aplicacion.PropuestaMensaje" />
+                <ValidationMessage For="@(() => Aplicacion.PropuestaMensaje)" class="text-danger small mt-1" />
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.08);" />
+
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary px-4" type="submit">
+                Guardar
+            </button>
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;

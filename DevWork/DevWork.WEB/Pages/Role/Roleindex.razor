@@ -1,120 +1,78 @@
 ﻿@page "/roles"
-
+@attribute [Authorize(Roles = "Admin,Administrador")]
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
- 
-
 @inject IRepository repository
 
-<h3>Role</h3>
+<PageTitle>Roles - DevWork</PageTitle>
 
-<div class="mb-3">
-
- 
-
- 
-
-<a class="btn btn-primary " href="/Roles/Create">New Role</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Roles del Sistema</h3>
+        <small style="color: #94A3B8;">Administra los niveles de acceso y perfiles de permisos en DevWork</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="/Roles/Create">
+        + Nuevo Rol
+    </a>
 </div>
 
- 
-
 <GenericList MyList="Roles">
-
- 
-
     <Body>
+        <div class="row g-4">
+            @foreach (var role in Roles!)
+            {
+                string nombre = role.Name ?? "Sin nombre";
+                bool esAdmin = nombre.Contains("Admin", StringComparison.OrdinalIgnoreCase);
+                bool esEmpresa = nombre.Contains("Empresa", StringComparison.OrdinalIgnoreCase);
 
-        <table class="table table-striped">
+                string icono = "bi-code-slash";
+                string descripcion = "Acceso estándar para gestionar perfil profesional y postularse a vacantes.";
+                string colorBadge = "background-color: rgba(99, 102, 241, 0.15); color: #A5B4FC; border: 1px solid rgba(99, 102, 241, 0.3);";
 
-            <thead>
-
-                <tr>
-
-                    <th>Id</th>
-
-                    <th>Nombre</th>
-
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var role in Roles !)
-
+                if (esAdmin)
                 {
-
-                    <tr>
-
-                         
-
-                        <td>
-
-                            @role.Id
-
-                        </td>
-
-                        <td>
-
-                            @role.Name
-
-                        </td>
-
- 
-
-                        
-
-
- 
-
-                      
-
- 
-
- 
-
- 
-
-                        <td>
-
-                            <a href="/Roles/edit/@role.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(role))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
+                    icono = "bi-shield-lock";
+                    descripcion = "Control total sobre usuarios, roles, perfiles y moderación de la plataforma.";
+                    colorBadge = "background-color: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3);";
+                }
+                else if (esEmpresa)
+                {
+                    icono = "bi-building";
+                    descripcion = "Permite publicar ofertas laborales, revisar postulaciones y explorar talento.";
+                    colorBadge = "background-color: rgba(16, 185, 129, 0.15); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.3);";
                 }
 
-            </tbody>
+                <div class="col-md-6 col-xl-4">
+                    <div class="profile-card h-100 d-flex flex-column justify-content-between p-4">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge rounded-pill px-3 py-1" style="@colorBadge font-size: 0.78rem;">
+                                    <i class="bi @icono me-1"></i> @nombre
+                                </span>
+                                <small style="color: #64748B; font-size: 0.75rem;">#@role.Id</small>
+                            </div>
 
-        </table>
+                            <h5 class="fw-bold text-white mb-2">@nombre</h5>
+                            <p class="small mb-0" style="color: #94A3B8; line-height: 1.55;">
+                                @descripcion
+                            </p>
+                        </div>
 
- 
-
+                        <div class="pt-3 mt-4 border-top d-flex gap-2" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <a href="/Roles/edit/@role.Id" class="btn btn-sm btn-warning flex-fill">
+                                Editar
+                            </a>
+                            <button class="btn btn-sm btn-danger flex-fill" @onclick="@(() => DeleteAsync(role))">
+                                Borrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
-
- 
-
- 
-
- 
-
- 
-
- 
 
 @code {
     public List<Role>? Roles { get; set; }
@@ -143,7 +101,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = $"¿Está seguro que quieres borrar el rol {item.Name}?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

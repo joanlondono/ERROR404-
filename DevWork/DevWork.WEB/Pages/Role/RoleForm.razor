@@ -1,20 +1,33 @@
-﻿@inject SweetAlertService swal
+﻿@using DevWork.Shared.Models
+@inject SweetAlertService swal
 
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="profile-card p-4" style="max-width: 640px;">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Nombre:</label>
-        <InputText class="form-control" @bind-Value="Role.Name" />
-        <ValidationMessage For="@(() => Role.Name)" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold small" style="color: #CBD5E1;">Nombre del rol</label>
+            <InputText class="form-control"
+                       style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                       placeholder="Ej: Desarrollador, Empresa, Administrador"
+                       @bind-Value="Role.Name" />
+            <ValidationMessage For="@(() => Role.Name)" />
+        </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">Regresar</button>
-</EditForm>
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm" type="submit">
+                <i class="bi bi-check-lg me-1"></i> Guardar Rol
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;

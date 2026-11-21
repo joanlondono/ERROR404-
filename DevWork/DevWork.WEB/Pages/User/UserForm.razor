@@ -1,42 +1,89 @@
-﻿@inject SweetAlertService swal
+﻿@using DevWork.Shared.Models
+@attribute [Authorize(Roles = "Admin,Administrador")]
+@inject SweetAlertService swal
+@inject IRepository repository
 
-<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation"></NavigationLock>
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
-<EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="profile-card p-4">
+    <EditForm EditContext="editContext" OnValidSubmit="OnSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label>Correo electrónico:</label>
-        <InputText class="form-control" @bind-Value="User.Email" />
-        <ValidationMessage For="@(() => User.Email)" />
-    </div>
+        <div class="row g-3">
+            <!-- Correo electrónico -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Correo electrónico</label>
+                <InputText class="form-control"
+                           type="email"
+                           style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                           placeholder="usuario@devwork.com"
+                           @bind-Value="User.Email" />
+                <ValidationMessage For="@(() => User.Email)" />
+            </div>
 
-    <div class="mb-3">
-        <label>Contraseña:</label>
-        <InputText class="form-control" type="password" @bind-Value="User.Password" />
-        <ValidationMessage For="@(() => User.Password)" />
-    </div>
+            <!-- Rol del usuario (Selector desplegable en lugar de número) -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">Rol asignado</label>
+                @if (roles.Any())
+                {
+                    <InputSelect class="form-select"
+                                 style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                                 @bind-Value="User.RoleId">
+                        <option value="0">-- Selecciona un rol --</option>
+                        @foreach (var rol in roles)
+                        {
+                            <option value="@rol.Id">@rol.Name</option>
+                        }
+                    </InputSelect>
+                }
+                else
+                {
+                    <InputNumber class="form-control"
+                                 style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                                 @bind-Value="User.RoleId" />
+                }
+                <ValidationMessage For="@(() => User.RoleId)" />
+            </div>
 
-    <div class="mb-3">
-        <label>Id del rol:</label>
-        <InputNumber class="form-control" @bind-Value="User.RoleId" />
-        <ValidationMessage For="@(() => User.RoleId)" />
-    </div>
+            <!-- Contraseña -->
+            <div class="col-12">
+                <label class="form-label fw-semibold small" style="color: #CBD5E1;">
+                    @(User.Id > 0 ? "Nueva contraseña (dejar en blanco para mantener la actual)" : "Contraseña")
+                </label>
+                <div class="input-group">
+                    <InputText class="form-control"
+                               type="@(mostrarPassword ? "text" : "password")"
+                               style="background-color: #1E293B; color: #F8FAFC; border: 1px solid rgba(255,255,255,0.15);"
+                               placeholder="••••••••"
+                               @bind-Value="User.Password" />
+                    <button class="btn btn-outline-light"
+                            type="button"
+                            style="border-color: rgba(255,255,255,0.15);"
+                            @onclick="() => mostrarPassword = !mostrarPassword">
+                        <i class="bi @(mostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                    </button>
+                </div>
+                <ValidationMessage For="@(() => User.Password)" />
+            </div>
+        </div>
 
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <button class="btn btn-success" type="button" @onclick="ReturnAction">
-        Regresar
-    </button>
-</EditForm>
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1);" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-light px-4" type="button" @onclick="ReturnAction">
+                Regresar
+            </button>
+            <button class="btn btn-primary px-4 shadow-sm" type="submit">
+                <i class="bi bi-check-lg me-1"></i> Guardar Usuario
+            </button>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     private EditContext editContext = null!;
-
-    protected override void OnInitialized()
-    {
-        editContext = new EditContext(User);
-    }
+    private List<Role> roles = new();
+    private bool mostrarPassword = false;
 
     [EditorRequired]
     [Parameter]
@@ -51,6 +98,24 @@
     public EventCallback ReturnAction { get; set; }
 
     public bool FormPostedSuccessfully { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(User);
+
+        try
+        {
+            var respRoles = await repository.GetAsync<List<Role>>("api/Roles");
+            if (!respRoles.Error && respRoles.Response != null)
+            {
+                roles = respRoles.Response;
+            }
+        }
+        catch
+        {
+            // Si falla la carga de roles, se muestra el InputNumber como respaldo
+        }
+    }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {

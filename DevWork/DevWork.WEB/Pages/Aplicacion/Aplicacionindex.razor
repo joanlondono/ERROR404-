@@ -1,124 +1,118 @@
 ﻿@page "/aplicaciones"
+@attribute [Authorize]
+@using DevWork.Shared.Models
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
-<h3>Aplicacion</h3>
 
-<div class="mb-3">
+<PageTitle>Mis Aplicaciones - DevWork</PageTitle>
 
- 
-
- 
-
-    <a class="btn btn-primary " href="/aplicaciones/Create">New Aplicacion</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Aplicaciones</h3>
+        <small style="color: #94A3B8;">Historial de postulaciones a proyectos y ofertas</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="/aplicaciones/Create">
+        + Nueva Aplicación
+    </a>
 </div>
 
- 
+<!-- Buscador rápido por título de oferta, estado o mensaje -->
+<div class="mb-4 d-flex gap-2">
+    <input type="text"
+           class="form-control"
+           style="color: #F8FAFC;"
+           placeholder="Filtrar por título de publicación, estado o propuesta..."
+           @bind="filtroTexto"
+           @bind:event="oninput" />
+    @if (!string.IsNullOrWhiteSpace(filtroTexto))
+    {
+        <button class="btn btn-outline-light" @onclick="() => filtroTexto = string.Empty">Limpiar</button>
+    }
+</div>
 
-<GenericList MyList="aplicaciones">
-
-
+<GenericList MyList="AplicacionesFiltradas">
     <Body>
+        <div class="row g-4">
+            @foreach (var aplicacion in AplicacionesFiltradas!)
+            {
+                var pub = ObtenerPublicacion(aplicacion.PublicacionId);
+                var tituloPub = pub?.Titulo ?? $"Oferta #{aplicacion.PublicacionId}";
 
-        <table class="table table-striped">
+                <div class="col-md-6 col-xl-4">
+                    <div class="profile-card h-100 d-flex flex-column justify-content-between p-4">
+                        <div>
+                            <!-- Encabezado con Estado y Fecha legible -->
+                            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                                <span class="badge-oferta">@aplicacion.Estado</span>
+                                <small style="color: #94A3B8;">
+                                    <i class="bi bi-calendar3 me-1"></i>@aplicacion.FechaPostulacion.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
 
-            <thead>
+                            <!-- Título real de la publicación con enlace directo -->
+                            <h5 class="fw-bold mb-1">
+                                <a href="/Publicaciones/detalle/@aplicacion.PublicacionId"
+                                   class="text-white text-decoration-none">
+                                    @tituloPub
+                                </a>
+                            </h5>
 
-                <tr>
+                            @if (pub != null)
+                            {
+                                <div class="mb-3">
+                                    <span class="badge-area">@pub.AreaSistemas</span>
+                                </div>
+                            }
 
-                    <th>Id</th>
+                            <!-- Propuesta / Mensaje con alto contraste -->
+                            <div class="p-3 rounded-3 mt-2" style="background-color: #0F172A; border: 1px solid rgba(255,255,255,0.08);">
+                                <small class="d-block fw-semibold mb-1" style="color: #94A3B8;">Propuesta / Mensaje:</small>
+                                <p class="mb-0 small" style="color: #F1F5F9; line-height: 1.5; white-space: pre-line;">
+                                    @aplicacion.PropuestaMensaje
+                                </p>
+                            </div>
+                        </div>
 
-                    <th>PublicacionId</th>
-                    <th>PerfilProfesionalId</th>
-                    <th>PropuestaMensaje</th>
-                    <th>Estado</th>
-                    <th>FechaPostulacion</th>
-                   
+                        <!-- Acciones -->
+                        <div class="pt-3 mt-4 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <div class="d-grid mb-2">
+                                <a href="/Publicaciones/detalle/@aplicacion.PublicacionId" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Ver publicación aplicada
+                                </a>
+                            </div>
 
-                   
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var aplicacion in aplicaciones!)
-
-                {
-
-                    <tr>
-
-                         
-
-                        <td>
-
-                            @aplicacion.Id
-
-                        </td>
-
-                        <td>
-
-                            @aplicacion.PublicacionId
-
-                        </td>
-                        <td>
-
-                            @aplicacion.PropuestaMensaje
-
-                        </td>
-                        <td>
-
-                            @aplicacion.Estado
-
-                        </td>
-                        <td>
-
-                            @aplicacion.FechaPostulacion
-
-                        </td>
-
-                        
-                        <td>
-
-                            <a href="/aplicaciones/edit/@aplicacion.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(aplicacion))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
-                }
-
-            </tbody>
-
-        </table>
-
- 
-
+                            <div class="d-flex gap-2">
+                                <a href="/aplicaciones/edit/@aplicacion.Id" class="btn btn-sm btn-warning flex-fill">
+                                    Editar
+                                </a>
+                                <button class="btn btn-sm btn-danger flex-fill" @onclick=@(() => DeleteAsync(aplicacion))>
+                                    Borrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
-
-  
-
 </GenericList>
-
- 
-
- 
-
- 
-
- 
-
- 
 
 @code {
     public List<Aplicacion>? aplicaciones { get; set; }
+    private Dictionary<int, Publicacion> publicacionesMap = new();
+    private string filtroTexto = string.Empty;
+
+    private List<Aplicacion>? AplicacionesFiltradas =>
+        aplicaciones == null ? null :
+        string.IsNullOrWhiteSpace(filtroTexto)
+            ? aplicaciones
+            : aplicaciones.Where(a =>
+                (ObtenerPublicacion(a.PublicacionId)?.Titulo?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.Estado?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.PropuestaMensaje?.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase) ?? false))
+              .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,16 +121,28 @@
 
     private async Task Load()
     {
-        var responseHttp = await repository.GetAsync<List<Aplicacion>>("api/aplicaciones");
-        if (responseHttp.Error)
+        var respAplicaciones = await repository.GetAsync<List<Aplicacion>>("api/aplicaciones");
+        if (respAplicaciones.Error)
         {
-            var mensajeError = await responseHttp.GetErrorMessageAsync();
+            var mensajeError = await respAplicaciones.GetErrorMessageAsync();
             await swal.FireAsync("Error", $"No se pudieron cargar las aplicaciones: {mensajeError}", SweetAlertIcon.Error);
             aplicaciones = new List<Aplicacion>();
             return;
         }
 
-        aplicaciones = responseHttp.Response!;
+        aplicaciones = respAplicaciones.Response!;
+
+        // Cargar publicaciones para mostrar el título real en lugar de "Pub #3"
+        var respPubs = await repository.GetAsync<List<Publicacion>>("api/Publicaciones");
+        if (!respPubs.Error && respPubs.Response != null)
+        {
+            publicacionesMap = respPubs.Response.ToDictionary(p => p.Id, p => p);
+        }
+    }
+
+    private Publicacion? ObtenerPublicacion(int publicacionId)
+    {
+        return publicacionesMap.TryGetValue(publicacionId, out var pub) ? pub : null;
     }
 
     private async Task DeleteAsync(Aplicacion aplicacion)
@@ -144,7 +150,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar esta postulación?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

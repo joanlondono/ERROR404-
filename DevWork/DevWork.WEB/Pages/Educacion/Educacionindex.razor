@@ -1,47 +1,77 @@
 ﻿@page "/educacion"
+@attribute [Authorize(Roles = "Admin,Administrador")]
 @using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
 @inject IRepository repository
 
-<h3>Educacion</h3>
+<PageTitle>Educación - DevWork</PageTitle>
 
-<div class="mb-3">
-    <a class="btn btn-primary" href="educacion/create">New Educacion</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Educación</h3>
+        <small style="color: #94A3B8;">Formación académica, títulos e instituciones</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="educacion/create">
+        + Nueva Educación
+    </a>
 </div>
 
 <GenericList MyList="educaciones">
     <Body>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>PerfilProfesionalId</th>
-                    <th>Titulo</th>
-                    <th>Institucion</th>
-                    <th>FechaInicio</th>
-                    <th>FechaFin</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in educaciones!)
+        <div class="d-flex flex-column gap-3">
+            @foreach (var item in educaciones!.OrderByDescending(e => e.FechaInicio))
+            {
+                string inicioTexto = "Sin fecha de inicio";
+                if (item.FechaInicio.Year > 1)
                 {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.PerfilProfesionalId</td>
-                        <td>@item.Titulo</td>
-                        <td>@item.Institucion</td>
-                        <td>@item.FechaInicio</td>
-                        <td>@item.FechaFin</td>
-                        <td>
-                            <a href="educacion/edit/@item.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick="@(() => DeleteAsync(item))">Borrar</button>
-                        </td>
-                    </tr>
+                    inicioTexto = item.FechaInicio.ToString("MMM yyyy");
                 }
-            </tbody>
-        </table>
+
+                bool enCurso = true;
+                string finTexto = "En curso";
+                if (item.FechaFin.HasValue && item.FechaFin.Value.Year > 1)
+                {
+                    enCurso = false;
+                    finTexto = item.FechaFin.Value.ToString("MMM yyyy");
+                }
+
+                <div class="profile-card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <span class="badge-area">@item.Institucion</span>
+
+                                <span class="small px-2 py-1 rounded-2"
+                                      style="background-color: #0F172A; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.08);">
+                                    <i class="bi bi-mortarboard me-1"></i>
+                                    @inicioTexto —
+                                    @if (enCurso)
+                                    {
+                                        <span class="fw-semibold" style="color: #34D399;">En curso</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@finTexto</span>
+                                    }
+                                </span>
+                            </div>
+
+                            <h5 class="fw-bold text-white mb-0">@item.Titulo</h5>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="educacion/edit/@item.Id" class="btn btn-sm btn-warning px-3">
+                                Editar
+                            </a>
+                            <button class="btn btn-sm btn-danger px-3" @onclick="@(() => DeleteAsync(item))">
+                                Borrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </Body>
 </GenericList>
 
@@ -72,7 +102,7 @@
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Está seguro que quieres borrar el registro?",
+            Text = "¿Está seguro que quieres borrar este registro académico?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });

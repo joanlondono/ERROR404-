@@ -1,17 +1,8 @@
 ﻿@page "/users/create"
-
+@attribute [Authorize(Roles = "Admin,Administrador")]
 @using DevWork.Shared.Models
-
- 
-
 @inject IRepository repository 
-
- 
-
 @inject NavigationManager navigationManager 
-
- 
-
 @inject SweetAlertService sweetAlertService 
 
 <h3>Crear usuario</h3>

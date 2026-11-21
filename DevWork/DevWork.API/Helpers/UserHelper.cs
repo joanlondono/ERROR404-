@@ -84,5 +84,10 @@ namespace DevWork.API.Helpers
         {
             return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
         }
+
+        public async Task<IdentityResult> UpdateUserAsync(User user)
+        {
+            return await _userManager.UpdateAsync(user);
+        }
     }
 }

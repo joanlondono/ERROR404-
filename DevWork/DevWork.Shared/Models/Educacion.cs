@@ -9,7 +9,7 @@ namespace DevWork.Shared.Models
     {
         public int Id { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "El ID del perfil profesional es obligatorio")]
+        // Asignado automáticamente en el backend según el usuario autenticado
         public int PerfilProfesionalId { get; set; }
 
         [Required(ErrorMessage = "El título es obligatorio")]

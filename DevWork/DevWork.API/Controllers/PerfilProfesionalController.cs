@@ -41,6 +41,21 @@ namespace DevWork.API.Controllers
         {
             try
             {
+                var usuario = await ObtenerUsuarioActualAsync();
+                if (usuario == null) return Unauthorized("No se pudo identificar al usuario.");
+
+                // Evita que un usuario cree perfiles duplicados
+                var yaTienePerfil = await _context.PerfilProfesionales.AnyAsync(x => x.UserId == usuario.Id);
+                if (yaTienePerfil && !User.IsInRole("Admin") && !User.IsInRole("Administrador"))
+                {
+                    return BadRequest("Ya tienes un perfil profesional creado.");
+                }
+
+                if (perfilprofesional.UserId == 0)
+                {
+                    perfilprofesional.UserId = usuario.Id;
+                }
+
                 _context.Add(perfilprofesional);
                 await _context.SaveChangesAsync();
                 return Ok(perfilprofesional);
@@ -56,6 +71,15 @@ namespace DevWork.API.Controllers
         {
             try
             {
+                var usuario = await ObtenerUsuarioActualAsync();
+                if (usuario == null) return Unauthorized();
+
+                var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
+                if (perfilprofesional.UserId != usuario.Id && !esAdmin)
+                {
+                    return Forbid();
+                }
+
                 _context.Update(perfilprofesional);
                 await _context.SaveChangesAsync();
                 return Ok(perfilprofesional);
@@ -74,9 +98,68 @@ namespace DevWork.API.Controllers
             {
                 return NotFound();
             }
+
+            var usuario = await ObtenerUsuarioActualAsync();
+            var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
+            if (usuario == null || (perfilprofesional.UserId != usuario.Id && !esAdmin))
+            {
+                return Forbid();
+            }
+
             _context.Remove(perfilprofesional);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpGet("mi-perfil")]
+        public async Task<ActionResult> GetMiPerfil()
+        {
+            // 1. Buscar cualquier claim que tenga un número entero (el UserId)
+            var posiblesIds = new[]
+            {
+            User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+            User.FindFirst("UserId")?.Value,
+            User.FindFirst("id")?.Value,
+            User.FindFirst("sub")?.Value
+            };
+
+            foreach (var idStr in posiblesIds)
+            {
+                if (int.TryParse(idStr, out int userId))
+                {
+                    var perfilPorId = await _context.PerfilProfesionales
+                        .FirstOrDefaultAsync(x => x.UserId == userId);
+
+                    if (perfilPorId != null)
+                        return Ok(perfilPorId);
+                }
+            }
+
+            // 2. Buscar cualquier claim que contenga el correo o UserName (ej. d38013787@gmail.com)
+            var emailOUserName = User.Identity?.Name
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("email")?.Value
+                ?? User.FindFirst("unique_name")?.Value
+                ?? User.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value;
+
+            if (!string.IsNullOrEmpty(emailOUserName))
+            {
+                var usuario = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == emailOUserName || u.UserName == emailOUserName);
+
+                if (usuario != null)
+                {
+                    var perfilPorUsuario = await _context.PerfilProfesionales
+                        .FirstOrDefaultAsync(x => x.UserId == usuario.Id);
+
+                    if (perfilPorUsuario != null)
+                        return Ok(perfilPorUsuario);
+                }
+            }
+
+            return NotFound();
         }
 
         [HttpPatch]
@@ -135,6 +218,37 @@ namespace DevWork.API.Controllers
             };
 
             return Ok(response);
+        }
+
+        private async Task<User?> ObtenerUsuarioActualAsync()
+        {
+            var posiblesIds = new[]
+            {
+        User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+        User.FindFirst("UserId")?.Value,
+        User.FindFirst("id")?.Value,
+        User.FindFirst("sub")?.Value
+        };
+
+            foreach (var idStr in posiblesIds)
+            {
+                if (int.TryParse(idStr, out int userId))
+                {
+                    var u = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+                    if (u != null) return u;
+                }
+            }
+
+            var email = User.Identity?.Name
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Claims.FirstOrDefault(c => c.Value.Contains("@"))?.Value;
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                return await _context.Users.FirstOrDefaultAsync(u => u.Email == email || u.UserName == email);
+            }
+
+            return null;
         }
     }
 }

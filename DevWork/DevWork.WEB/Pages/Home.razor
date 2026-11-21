@@ -1,7 +1,207 @@
 ﻿@page "/"
+@layout LandingLayout
+@using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Home</PageTitle>
+<PageTitle>DevWork - Inicio</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="fullscreen-hero">
+    <div class="hero-overlay"></div>
 
-Welcome to your new app.
+    <!-- Barra superior transparente flotando sobre la imagen -->
+    <header class="hero-top-navbar">
+        <a href="" class="hero-brand">
+            <i class="bi bi-code-slash text-primary me-2"></i>DevWork<span class="text-primary">.</span>
+        </a>
+
+        <nav class="hero-top-links">
+            <a href="" class="hero-nav-item active">HOME</a>
+            <a href="/publicaciones" class="hero-nav-item">PUBLICACIONES</a>
+
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/aplicaciones" class="hero-nav-item">APLICACIONES</a>
+                    <a href="/Perfiles" class="hero-nav-item">
+                        <AuthorizeView Roles="Admin,Administrador" Context="adminContext">
+                            <Authorized>PERFILES</Authorized>
+                            <NotAuthorized>MI PERFIL</NotAuthorized>
+                        </AuthorizeView>
+                    </a>
+                    <a href="/preguntas" class="hero-nav-item">PREGUNTAS</a>
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin,Administrador">
+                <Authorized>
+                    <div class="position-relative">
+                        <button class="hero-nav-item bg-transparent border-0 p-0 d-inline-flex align-items-center gap-1"
+                                style="position: relative; z-index: 1051;"
+                                type="button"
+                                @onclick="() => menuGestionAbierto = !menuGestionAbierto">
+                            <span>GESTIÓN</span>
+                            <i class="bi bi-chevron-down" style="font-size: 0.65rem;"></i>
+                        </button>
+
+                        @if (menuGestionAbierto)
+                        {
+                            <!-- Capa invisible para cerrar al hacer clic fuera -->
+                            <div style="position: fixed; inset: 0; z-index: 1040;"
+                                 @onclick="() => menuGestionAbierto = false"></div>
+
+                            <ul class="dropdown-menu show shadow"
+                                style="position: absolute; top: 100%; right: 0; margin-top: 0.65rem; min-width: 195px; background-color: #111827; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 0.45rem; z-index: 1050;">
+                                <li>
+                                    <a class="dropdown-item rounded-2 small py-2 text-light" href="/ExperienciaProfesional" @onclick="() => menuGestionAbierto = false">
+                                        <i class="bi bi-award me-2 text-primary"></i>Experiencia
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 small py-2 text-light" href="/educacion" @onclick="() => menuGestionAbierto = false">
+                                        <i class="bi bi-mortarboard me-2 text-primary"></i>Educación
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 small py-2 text-light" href="/certificaciones" @onclick="() => menuGestionAbierto = false">
+                                        <i class="bi bi-patch-check me-2 text-primary"></i>Certificaciones
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1" style="border-color: rgba(255,255,255,0.08);" /></li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 small py-2 text-light" href="/users" @onclick="() => menuGestionAbierto = false">
+                                        <i class="bi bi-people me-2 text-primary"></i>Usuarios
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item rounded-2 small py-2 text-light" href="/roles" @onclick="() => menuGestionAbierto = false">
+                                        <i class="bi bi-shield-lock me-2 text-primary"></i>Roles
+                                    </a>
+                                </li>
+                            </ul>
+                        }
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+
+            <span class="hero-nav-divider"></span>
+
+            <AuthLinks />
+        </nav>
+    </header>
+
+    <div class="hero-content text-center">
+        <!-- Nombre de la página con tipografía amplia y minimalista -->
+        <h1 class="hero-title">DEVWORK</h1>
+
+        <!-- Subtítulo breve y elegante -->
+        <p class="hero-subtitle">Conectando talento tecnológico con proyectos que transforman</p>
+
+        <!-- Botones sutiles y minimalistas -->
+        <div class="hero-actions mt-4">
+            <a href="/publicaciones" class="btn-hero-primary">Explorar Ofertas</a>
+            <a href="/Perfiles" class="btn-hero-secondary">Mi Perfil</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fullscreen-hero {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-top-navbar {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        padding: 1.5rem 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .hero-brand {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-decoration: none;
+        letter-spacing: 0.04em;
+    }
+
+    .hero-brand:hover {
+        color: #E2E8F0;
+    }
+
+    .hero-top-links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.4rem;
+    }
+
+    .hero-nav-item {
+        color: rgba(248, 250, 252, 0.88);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        transition: color 0.2s ease;
+    }
+
+    .hero-nav-item:hover,
+    .hero-nav-item.active {
+        color: #FFFFFF;
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+
+    .dropdown-menu .dropdown-item:hover {
+        background-color: rgba(99, 102, 241, 0.18) !important;
+        color: #FFFFFF !important;
+    }
+
+    .hero-nav-divider {
+        width: 1px;
+        height: 18px;
+        background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .hero-top-links ::deep a,
+    .hero-top-links ::deep span,
+    .hero-top-links ::deep button {
+        color: rgba(248, 250, 252, 0.92) !important;
+        font-size: 0.82rem;
+        text-decoration: none;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 5;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 4rem;
+    }
+
+    @@media (max-width: 768px) {
+        .hero-top-navbar {
+            padding: 1.25rem 1.5rem;
+            justify-content: center;
+        }
+
+        .hero-top-links {
+            justify-content: center;
+            gap: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private bool menuGestionAbierto = false;
+}

@@ -1,19 +1,213 @@
 ﻿@inherits LayoutComponentBase
-@using DevWork.WEB.Shared
+@using Microsoft.AspNetCore.Components.Authorization
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="app-shell">
+    <!-- Única barra superior horizontal -->
+    <header class="top-navbar">
+        <div class="navbar-inner">
+            <a href="" class="brand-logo">
+                <i class="bi bi-code-slash text-primary me-2"></i>DevWork<span class="brand-dot">.</span>
+            </a>
 
-    <main>
-        <div class="top-row px-4">
-            <AuthLinks />
-            <a href="https://microsoft.com" target="_blank">About</a>
+            <nav class="top-nav-links">
+                <NavLink href="" Match="NavLinkMatch.All" class="top-nav-item">HOME</NavLink>
+                <NavLink href="/publicaciones" class="top-nav-item">PUBLICACIONES</NavLink>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <NavLink href="/aplicaciones" class="top-nav-item">APLICACIONES</NavLink>
+                        <NavLink href="/Perfiles" class="top-nav-item">
+                            <AuthorizeView Roles="Admin,Administrador" Context="adminContext">
+                                <Authorized>PERFILES</Authorized>
+                                <NotAuthorized>MI PERFIL</NotAuthorized>
+                            </AuthorizeView>
+                        </NavLink>
+                        <NavLink href="/preguntas" class="top-nav-item">PREGUNTAS</NavLink>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin,Administrador">
+                    <Authorized>
+                        <div class="position-relative">
+                            <button class="top-nav-item bg-transparent border-0 p-0 d-inline-flex align-items-center gap-1"
+                                    style="position: relative; z-index: 1051;"
+                                    type="button"
+                                    @onclick="() => menuGestionAbierto = !menuGestionAbierto">
+                                <span>GESTIÓN</span>
+                                <i class="bi bi-chevron-down" style="font-size: 0.65rem;"></i>
+                            </button>
+
+                            @if (menuGestionAbierto)
+                            {
+                                <!-- Capa invisible para cerrar al hacer clic fuera -->
+                                <div style="position: fixed; inset: 0; z-index: 1040;"
+                                     @onclick="() => menuGestionAbierto = false"></div>
+
+                                <ul class="dropdown-menu show shadow"
+                                    style="position: absolute; top: 100%; right: 0; margin-top: 0.65rem; min-width: 195px; background-color: #111827; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 0.45rem; z-index: 1050;">
+                                    <li>
+                                        <a class="dropdown-item rounded-2 small py-2 text-light" href="/ExperienciaProfesional" @onclick="() => menuGestionAbierto = false">
+                                            <i class="bi bi-award me-2 text-primary"></i>Experiencia
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 small py-2 text-light" href="/educacion" @onclick="() => menuGestionAbierto = false">
+                                            <i class="bi bi-mortarboard me-2 text-primary"></i>Educación
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 small py-2 text-light" href="/certificaciones" @onclick="() => menuGestionAbierto = false">
+                                            <i class="bi bi-patch-check me-2 text-primary"></i>Certificaciones
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider my-1" style="border-color: rgba(255,255,255,0.08);" /></li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 small py-2 text-light" href="/users" @onclick="() => menuGestionAbierto = false">
+                                            <i class="bi bi-people me-2 text-primary"></i>Usuarios
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-2 small py-2 text-light" href="/roles" @onclick="() => menuGestionAbierto = false">
+                                            <i class="bi bi-shield-lock me-2 text-primary"></i>Roles
+                                        </a>
+                                    </li>
+                                </ul>
+                            }
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+
+                <span class="nav-separator"></span>
+
+                <AuthLinks />
+            </nav>
         </div>
+    </header>
 
-        <article class="content px-4">
-            @Body
-        </article>
+    <!-- Contenido principal a ancho completo -->
+    <main class="main-container">
+        @Body
     </main>
 </div>
+
+<style>
+    .app-shell {
+        min-height: 100vh;
+        width: 100%;
+        background-color: #0B1120;
+        color: #F8FAFC;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .top-navbar {
+        width: 100%;
+        background-color: rgba(11, 17, 32, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .navbar-inner {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .brand-logo {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        text-decoration: none;
+        letter-spacing: 0.04em;
+    }
+
+    .brand-logo:hover {
+        color: #E2E8F0;
+    }
+
+    .brand-dot {
+        color: #6366F1;
+    }
+
+    .top-nav-links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.4rem;
+    }
+
+    .top-nav-item {
+        color: rgba(203, 213, 225, 0.85);
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        padding-bottom: 4px;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .top-nav-item:hover {
+        color: #FFFFFF;
+    }
+
+    .top-nav-item.active {
+        color: #FFFFFF;
+        border-bottom-color: #6366F1;
+    }
+
+    .dropdown-menu .dropdown-item:hover {
+        background-color: rgba(99, 102, 241, 0.18) !important;
+        color: #FFFFFF !important;
+    }
+
+    .nav-separator {
+        width: 1px;
+        height: 18px;
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .top-nav-links ::deep a,
+    .top-nav-links ::deep span,
+    .top-nav-links ::deep button {
+        color: rgba(248, 250, 252, 0.9) !important;
+        font-size: 0.82rem;
+        text-decoration: none;
+    }
+
+    .main-container {
+        width: 100%;
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 2.25rem 2rem;
+        flex: 1;
+    }
+
+    @@media (max-width: 768px) {
+        .navbar-inner {
+            padding: 1rem 1.25rem;
+            justify-content: center;
+        }
+
+        .top-nav-links {
+            justify-content: center;
+            gap: 0.9rem;
+        }
+
+        .main-container {
+            padding: 1.5rem 1.25rem;
+        }
+    }
+</style>
+
+@code {
+    private bool menuGestionAbierto = false;
+}

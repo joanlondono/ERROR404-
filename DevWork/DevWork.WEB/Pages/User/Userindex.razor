@@ -1,180 +1,192 @@
-﻿@page "/Users" 
-
+﻿@page "/Users"
+@attribute [Authorize(Roles = "Admin,Administrador")]
+@using DevWork.Shared.Models
 @inject NavigationManager navigationManager
 @inject SweetAlertService swal
- 
-
- 
-
 @inject IRepository repository
 
-<h3>User</h3>
+<PageTitle>Gestión de Usuarios - DevWork</PageTitle>
 
-<div class="mb-3">
-
- 
-
- 
-
-    <a class="btn btn-primary " href="/Users/Create">New User</a>
-
- 
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-0 text-white">Usuarios</h3>
+        <small style="color: #94A3B8;">Administra las cuentas registradas y sus permisos en la plataforma</small>
+    </div>
+    <a class="btn btn-primary shadow-sm px-4" href="/Users/Create">
+        + Nuevo Usuario
+    </a>
 </div>
 
- 
-
 <GenericList MyList="Users">
-
- 
-
     <Body>
+        <!-- Barra de búsqueda rápida -->
+        <div class="mb-4 d-flex gap-2">
+            <input type="text"
+                   class="form-control"
+                   style="color: #F8FAFC;"
+                   placeholder="Buscar por correo electrónico o rol..."
+                   @bind="filtroTexto"
+                   @bind:event="oninput" />
+            @if (!string.IsNullOrWhiteSpace(filtroTexto))
+            {
+                <button type="button" class="btn btn-outline-light" @onclick="() => filtroTexto = string.Empty">
+                    Limpiar
+                </button>
+            }
+        </div>
 
-        <table class="table table-striped">
-
-            <thead>
-
-                <tr>
-
-                    <th>Id</th>
-
-                    <th>Email</th>
-
-                    <th>Password</th>
-
-                    <th>RoleId</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var user in Users!)
-
+        @if (!UsuariosFiltrados.Any())
+        {
+            <div class="profile-empty-card text-center p-5">
+                <h5 class="fw-bold mb-1 text-white">No se encontraron usuarios</h5>
+                <p style="color: #94A3B8;" class="mb-0">No hay cuentas que coincidan con "@filtroTexto".</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var user in UsuariosFiltrados)
                 {
+                    string inicial = "U";
+                    if (!string.IsNullOrWhiteSpace(user.Email))
+                    {
+                        inicial = user.Email.Substring(0, 1).ToUpper();
+                    }
 
-                    <tr>
+                    string nombreRol = $"Rol #{user.RoleId}";
+                    if (nombresRoles.TryGetValue(user.RoleId, out var rolEncontrado))
+                    {
+                        nombreRol = rolEncontrado;
+                    }
 
-                         
+                    bool esRolAdmin = nombreRol.Contains("Admin", StringComparison.OrdinalIgnoreCase);
 
-                        <td>
+                    <div class="col-md-6 col-xl-4">
+                        <div class="profile-card h-100 d-flex flex-column justify-content-between p-4">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                    <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                        <div class="profile-photo-ring flex-shrink-0">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                                 style="width: 48px; height: 48px; background-color: #1E1B4B; font-size: 1.15rem; border: 2px solid #111827;">
+                                                @inicial
+                                            </div>
+                                        </div>
 
-                            @user.Id
+                                        <div class="overflow-hidden">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                @if (esRolAdmin)
+                                                {
+                                                    <span class="badge rounded-pill px-2 py-1"
+                                                          style="background-color: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.72rem;">
+                                                        <i class="bi bi-shield-lock me-1"></i>@nombreRol
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge-area" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-person-badge me-1"></i>@nombreRol
+                                                    </span>
+                                                }
+                                                <small style="color: #64748B; font-size: 0.75rem;">#@user.Id</small>
+                                            </div>
 
-                        </td>
+                                            <h6 class="fw-bold text-white mb-0 text-truncate" title="@user.Email">
+                                                @user.Email
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <td>
-
-                            @user.Email 
-
-                        </td>
-                        <td>
-                            @user.Password
-                        </td>
-
- 
-
-                        
-
-                        <td>
-
-                            @user.RoleId
-
-                        </td>
-
- 
-
- 
-
-                      
-
- 
-
- 
-
- 
-
-                        <td>
-
-                            <a href="/Users/edit/@user.Id" class="btn btn-warning">Editar</a>
-                            <button class="btn btn-danger" @onclick=@(() => DeleteAsync(user))>Borrar</button>
-
-                        </td>
-
- 
-
-                    </tr>
-
+                            <div class="pt-3 mt-3 border-top d-flex gap-2" style="border-color: rgba(255,255,255,0.08) !important;">
+                                <a href="/Users/edit/@user.Id" class="btn btn-sm btn-warning flex-fill">
+                                    Editar
+                                </a>
+                                <button class="btn btn-sm btn-danger flex-fill" @onclick="@(() => DeleteAsync(user))">
+                                    Borrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 }
-
-            </tbody>
-
-        </table>
-
- 
-
+            </div>
+        }
     </Body>
-
-  
-
 </GenericList>
 
- 
-
- 
-
- 
-
- 
-
- 
-
 @code {
+    public List<UserModel>? Users { get; set; }
+    private Dictionary<int, string> nombresRoles = new();
+    private string filtroTexto = string.Empty;
 
-    public List<UserModel> Users { get; set; }
-
-    protected async override Task OnInitializedAsync()
+    private IEnumerable<UserModel> UsuariosFiltrados
     {
+        get
+        {
+            if (Users == null) return Enumerable.Empty<UserModel>();
+            if (string.IsNullOrWhiteSpace(filtroTexto)) return Users;
+
+            return Users.Where(u =>
+                (!string.IsNullOrEmpty(u.Email) && u.Email.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase)) ||
+                (nombresRoles.TryGetValue(u.RoleId, out var r) && r.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase)) ||
+                u.Id.ToString() == filtroTexto.Trim());
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarRolesAsync();
         await Load();
+    }
+
+    private async Task CargarRolesAsync()
+    {
+        try
+        {
+            var respRoles = await repository.GetAsync<List<Role>>("api/Roles");
+            if (!respRoles.Error && respRoles.Response != null)
+            {
+                nombresRoles = respRoles.Response.ToDictionary(r => r.Id, r => r.Name);
+            }
+        }
+        catch
+        {
+            // Si api/Roles no responde, la vista muestra "Rol #Id" sin fallar
+        }
     }
 
     private async Task Load()
     {
-        // 1. Realizamos la petición HTTP
         var responseHppt = await repository.GetAsync<List<UserModel>>("api/Users");
 
-        // 2. ¡Validamos primero si el repositorio marca un error!
         if (responseHppt.Error)
         {
             var mensajeError = await responseHppt.GetErrorMessageAsync();
             await swal.FireAsync("Error", $"No se pudieron cargar los usuarios: {mensajeError}", SweetAlertIcon.Error);
-            Users = new List<UserModel>(); // Inicializamos la lista vacía para evitar que la UI colapse
+            Users = new List<UserModel>();
             return;
         }
 
-        // 3. Si todo está correcto, asignamos la lista segura
         Users = responseHppt.Response!;
     }
 
-    private async Task DeleteAsync(UserModel User)
+    private async Task DeleteAsync(UserModel user)
     {
         var result = await swal.FireAsync(new SweetAlertOptions
         {
             Title = "Confirmación",
-            Text = "¿Esta seguro que quieres borrar el registro?",
+            Text = $"¿Está seguro que quieres borrar el usuario {user.Email}?",
             Icon = SweetAlertIcon.Question,
             ShowCancelButton = true
         });
 
-        var confirm = string.IsNullOrEmpty(result.Value);
-
-        if (confirm)
+        if (string.IsNullOrEmpty(result.Value))
         {
             return;
         }
 
-        var responseHTTP = await repository.DeleteAsync($"api/Users/{User.Id}");
+        var responseHTTP = await repository.DeleteAsync($"api/Users/{user.Id}");
 
         if (responseHTTP.Error)
         {
@@ -193,7 +205,4 @@
             await Load();
         }
     }
-
 }
-
- 
